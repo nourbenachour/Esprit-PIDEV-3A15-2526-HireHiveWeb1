@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HireHive | Inscription</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #7c3aed;
+      --accent-2: #5b21b6;
+      --text: #0f172a;
+      --muted: #475569;
+      --bg: #f6f4fb;
+      --card: #ffffff;
+      --border: #e6e0f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      color: var(--text);
+    }
+    .layout {
+      width: 100%;
+      max-width: 980px;
+      min-height: 640px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+    }
+    .hero {
+      background: #f1eafe;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      padding: 32px;
+    }
+    .hero-content { max-width: 440px; }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      background: #ede9fe;
+      border: 1px solid #e6e0f7;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      margin-bottom: 10px;
+    }
+    .hero h1 { margin: 0; font-size: 30px; font-weight: 800; color: var(--accent-2); }
+    .hero h2 { margin: 6px 0 8px; font-size: 20px; font-weight: 700; line-height: 1.3; }
+    .hero p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+    .panel {
+      background: var(--card);
+      padding: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 22px;
+      background: var(--card);
+    }
+    .title { margin: 6px 0 4px; font-size: 22px; font-weight: 800; color: var(--text); text-align: center; }
+    .subtitle { margin: 0 0 12px; color: var(--muted); text-align: center; font-size: 14px; }
+    form { display: flex; flex-direction: column; gap: 10px; }
+    label { font-size: 13px; color: var(--text); font-weight: 700; }
+    select, input[type=text], input[type=email], input[type=password] {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #f8f9fb;
+      font-size: 14px;
+      color: var(--text);
+    }
+    select:focus, input:focus { outline: 2px solid rgba(124,58,237,0.2); outline-offset: 1px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .row > div { flex: 1 1 48%; min-width: 200px; }
+    .btn {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      background: var(--card);
+      color: var(--text);
+    }
+    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-2); }
+    .btn-ghost { background: var(--card); border-color: var(--border); color: var(--accent-2); }
+    .helper { text-align: center; color: var(--muted); font-size: 13px; margin-top: 6px; }
+    .profile-select { display: flex; gap: 10px; align-items: center; }
+    .profile-select { display: flex; gap: 6px; align-items: center; }
+    .profile-select label { font-size: 12px; font-weight: 600; color: var(--text); margin: 0; line-height: 1.1; white-space: nowrap; }
+    .profile-select select { font-size: 14px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border); min-width: 220px; }
+    .section-label { font-weight: 800; font-size: 14px; margin: 10px 0 4px; color: var(--text); }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .hero { min-height: 200px; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <section class="hero">
+      <div class="hero-content">
+        <div class="pill">HireHive</div>
+        <h1>Créer un compte</h1>
+        <h2>Choisissez votre profil et complétez vos infos</h2>
+        <p>Inscription simple pour candidats et recruteurs, avec les mêmes données que votre base.</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="card">
+        <h1 class="title">Inscription</h1>
+        <p class="subtitle">Renseignez vos informations</p>
+
+        <form method="post" action="{{ path('app_register') }}" enctype="multipart/form-data">
+          <div class="profile-select">
+            <label for="profile">Profil :</label>
+            <select id="profile" name="profile">
+              <option value="CANDIDATE" {% if profile|default('CANDIDATE') == 'CANDIDATE' %}selected{% endif %}>Candidat</option>
+              <option value="RECRUITER" {% if profile|default('CANDIDATE') == 'RECRUITER' %}selected{% endif %}>Recruteur</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="firstName">Prénom</label>
+              <input type="text" id="firstName" name="firstName" value="{{ firstName|default('') }}" required>
+            </div>
+            <div>
+              <label for="lastName">Nom</label>
+              <input type="text" id="lastName" name="lastName" value="{{ lastName|default('') }}" required>
+            </div>
+          </div>
+
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" value="{{ email|default('') }}" required>
+
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" name="password" required>
+
+          <label for="phone">Téléphone</label>
+          <input type="text" id="phone" name="phone" value="{{ phone|default('') }}">
+
+          <div id="recruiter-extra" style="display:none;">
+            <div class="section-label">Infos recruteur</div>
+            <label for="company_name">Entreprise</label>
+            <input type="text" id="company_name" name="company_name" value="{{ company_name|default('') }}">
+            <label for="company_sector">Secteur</label>
+            <input type="text" id="company_sector" name="company_sector" value="{{ company_sector|default('') }}">
+            <label for="company_logo">Logo (URL)</label>
+            <input type="text" id="company_logo" name="company_logo" value="{{ company_logo|default('') }}">
+          </div>
+
+          <button class="btn btn-primary" type="submit">Créer le compte</button>
+          <a class="btn btn-ghost" href="{{ path('app_login') }}" style="text-align:center; display:block; text-decoration:none;">Déjà inscrit ? Connexion</a>
+        </form>
+        <div class="helper">Vos données restent privées. Vous pourrez les modifier après connexion.</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const profileSelect = document.getElementById('profile');
+    const recruiterExtra = document.getElementById('recruiter-extra');
+    function toggleProfile() {
+      recruiterExtra.style.display = profileSelect.value === 'RECRUITER' ? 'block' : 'none';
+    }
+    profileSelect.addEventListener('change', toggleProfile);
+    toggleProfile();
+  </script>
+</body>
+</html>
