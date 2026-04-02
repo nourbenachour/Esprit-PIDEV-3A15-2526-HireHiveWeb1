@@ -26,7 +26,7 @@
             </div>
 
             <div class="d-flex justify-content-end mb-3">
-                <a href="{{ path('interview_new') }}" class="btn soft-btn soft-btn-primary">Planifier un entretien</a>
+                <a href="{{ path('interview_new') }}" class="btn soft-btn soft-btn-primary">Créer un entretien</a>
             </div>
 
             <div class="module-card">
@@ -65,24 +65,24 @@
 </div>
 
 <style>
-.module-title { color: #ff6a00; font-weight: 800; letter-spacing: 0.2px; }
+.module-title { color: #ff6a00; font-weight: 800; letter-spacing: 0.2px; font-size: 1.85rem; }
 .module-card { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 18px; }
-.module-card-body { padding: 14px 16px; }
+.module-card-body { padding: 12px 14px; }
 .soft-input { border-radius: 12px; border: 1px solid #d4daea; background: #fff; min-height: 44px; }
 .date-input { max-width: 170px; }
 .filter-label { font-weight: 700; color: #1f2a44; }
-.soft-btn { border-radius: 999px; padding: 10px 18px; font-weight: 700; border: 0; }
+.soft-btn { border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 0.95rem; border: 0; }
 .soft-btn-primary { background: linear-gradient(135deg, #6c2bd9, #8f4bff); color: #fff; box-shadow: 0 6px 16px rgba(108, 43, 217, 0.35); }
 .soft-btn-primary:hover { color: #fff; transform: translateY(-1px); }
 .soft-btn-light { background: #ece8ff; color: #6c2bd9; }
 .table-wrap { width: 100%; overflow-x: auto; }
-.grid-table { display: grid; gap: 6px; }
+.grid-table { display: grid; gap: 5px; }
 .grid-interviews-cols { min-width: 860px; grid-template-columns: minmax(140px, 1.1fr) minmax(140px, 1.1fr) minmax(110px, 0.85fr) minmax(140px, 0.95fr) 170px; }
-.grid-head { background: #d2d7e0; border: 1px solid #c6cfdd; border-radius: 12px; color: #0d1b3f; font-size: 1.08rem; font-weight: 800; padding: 12px 14px; min-height: 56px; display: flex; align-items: center; }
-.grid-cell { background: #f5f7fb; border: 1px solid #dbe2ee; border-radius: 12px; padding: 12px 14px; font-size: 1.03rem; color: #27364f; min-height: 56px; display: flex; align-items: center; }
+.grid-head { background: #d2d7e0; border: 1px solid #c6cfdd; border-radius: 11px; color: #0d1b3f; font-size: 0.98rem; font-weight: 800; padding: 10px 12px; min-height: 50px; display: flex; align-items: center; }
+.grid-cell { background: #f5f7fb; border: 1px solid #dbe2ee; border-radius: 11px; padding: 10px 12px; font-size: 0.95rem; color: #27364f; min-height: 50px; display: flex; align-items: center; }
 .grid-empty { grid-column: 1 / -1; background: #f8f9fd; border: 1px dashed #d4dbe8; border-radius: 12px; padding: 22px; text-align: center; color: #64748b; font-weight: 600; }
 .actions-cell { white-space: nowrap; }
-.action-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; margin-right: 8px; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3); text-decoration: none; }
+.action-btn { width: 34px; height: 34px; border-radius: 50%; border: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; margin-right: 6px; box-shadow: 0 3px 8px rgba(124, 58, 237, 0.26); text-decoration: none; }
 .actions-cell .action-btn:last-child { margin-right: 0; }
 .action-btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
 .action-btn:hover { color: #fff; transform: translateY(-1px); }

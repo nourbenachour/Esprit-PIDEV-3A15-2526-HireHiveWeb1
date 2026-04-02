@@ -13,15 +13,22 @@
 
             <div class="module-card p-3 p-md-4">
                 <form method="get" class="filter-panel mb-3">
-                    <input type="text" name="search" class="form-control soft-input search-input" placeholder="Recherche.." value="{{ app.request.query.get('search') ?? '' }}">
-                    <span class="filter-label">Du :</span>
-                    <input type="date" name="dateFrom" class="form-control soft-input date-input" value="{{ app.request.query.get('dateFrom') ?? '' }}" placeholder="De">
-                    <span class="filter-label">Au :</span>
-                    <input type="date" name="dateTo" class="form-control soft-input date-input" value="{{ app.request.query.get('dateTo') ?? '' }}" placeholder="A">
-                    <button type="submit" class="btn soft-btn soft-btn-light">Rechercher</button>
-                    <a href="{{ path('contract_index') }}" class="btn soft-btn soft-btn-primary">Réinitialiser</a>
-                    <a href="{{ path('contract_new') }}" class="btn soft-btn soft-btn-primary ms-auto">Créer un contrat</a>
+                    <div class="filter-row filter-row-search">
+                        <input type="text" name="search" class="form-control soft-input search-input" placeholder="Recherche.." value="{{ app.request.query.get('search') ?? '' }}">
+                    </div>
+                    <div class="filter-row filter-row-controls">
+                        <span class="filter-label">Du :</span>
+                        <input type="date" name="dateFrom" class="form-control soft-input date-input" value="{{ app.request.query.get('dateFrom') ?? '' }}" placeholder="De">
+                        <span class="filter-label">Au :</span>
+                        <input type="date" name="dateTo" class="form-control soft-input date-input" value="{{ app.request.query.get('dateTo') ?? '' }}" placeholder="A">
+                        <button type="submit" class="btn soft-btn soft-btn-primary">Filtrer</button>
+                        <a href="{{ path('contract_index') }}" class="btn soft-btn soft-btn-light">Réinitialiser</a>
+                    </div>
                 </form>
+
+                <div class="d-flex justify-content-end mb-3">
+                    <a href="{{ path('contract_new') }}" class="btn soft-btn soft-btn-primary">Créer un contrat</a>
+                </div>
 
                 <div class="table-wrap">
                     <div class="grid-table grid-contracts-cols">
@@ -60,33 +67,36 @@
 </div>
 
 <style>
-.module-title { color: #ff6a00; font-weight: 800; letter-spacing: 0.2px; }
+.module-title { color: #ff6a00; font-weight: 800; letter-spacing: 0.2px; font-size: 1.85rem; }
 .module-card { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 18px; }
-.filter-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 12px; border: 1px solid #dde3ef; border-radius: 14px; background: #f1f4f9; }
-.soft-input { border-radius: 12px; border: 1px solid #ccd5e6; background: #fff; min-height: 46px; }
-.search-input { min-width: 280px; flex: 1 1 300px; }
-.date-input { width: 220px; }
-.filter-label { font-weight: 800; color: #1f2a44; font-size: 1.2rem; line-height: 1; margin: 0 2px; }
-.soft-btn { border-radius: 999px; padding: 10px 24px; font-weight: 800; border: 0; }
+.filter-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid #dde3ef; border-radius: 14px; background: #f1f4f9; }
+.filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.filter-row-search { width: 100%; }
+.filter-row-controls { width: 100%; }
+.soft-input { border-radius: 12px; border: 1px solid #d4daea; background: #fff; min-height: 44px; }
+.search-input { width: 100%; }
+.date-input { max-width: 170px; }
+.filter-label { font-weight: 700; color: #1f2a44; line-height: 1; margin: 0 2px; }
+.soft-btn { border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 0.95rem; border: 0; }
 .soft-btn-primary { background: linear-gradient(135deg, #6c2bd9, #8f4bff); color: #fff; box-shadow: 0 5px 14px rgba(108, 43, 217, 0.3); }
 .soft-btn-primary:hover { color: #fff; transform: translateY(-1px); }
 .soft-btn-light { background: #ece8ff; color: #6c2bd9; }
 .table-wrap { width: 100%; overflow-x: auto; }
-.grid-table { display: grid; gap: 8px; }
+.grid-table { display: grid; gap: 5px; }
 .grid-contracts-cols { min-width: 1080px; grid-template-columns: minmax(130px, 1fr) minmax(140px, 1.1fr) minmax(110px, 0.85fr) minmax(90px, 0.75fr) minmax(120px, 0.9fr) minmax(120px, 0.9fr) 170px; }
-.grid-head { background: #d2d7e0; border: 1px solid #c6cfdd; border-radius: 12px; color: #0d1b3f; font-size: 1.08rem; font-weight: 800; padding: 14px 18px; min-height: 64px; display: flex; align-items: center; }
-.grid-cell { background: #f5f7fb; border: 1px solid #dbe2ee; border-radius: 12px; padding: 14px 18px; font-size: 1.03rem; color: #27364f; min-height: 64px; display: flex; align-items: center; }
+.grid-head { background: #d2d7e0; border: 1px solid #c6cfdd; border-radius: 11px; color: #0d1b3f; font-size: 0.98rem; font-weight: 800; padding: 10px 12px; min-height: 50px; display: flex; align-items: center; }
+.grid-cell { background: #f5f7fb; border: 1px solid #dbe2ee; border-radius: 11px; padding: 10px 12px; font-size: 0.95rem; color: #27364f; min-height: 50px; display: flex; align-items: center; }
 .grid-empty { grid-column: 1 / -1; background: #f8f9fd; border: 1px dashed #d4dbe8; border-radius: 12px; padding: 22px; text-align: center; color: #64748b; font-weight: 600; }
 .actions-cell { white-space: nowrap; }
-.action-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; margin-right: 8px; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3); text-decoration: none; }
+.action-btn { width: 34px; height: 34px; border-radius: 50%; border: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; margin-right: 6px; box-shadow: 0 3px 8px rgba(124, 58, 237, 0.26); text-decoration: none; }
 .actions-cell .action-btn:last-child { margin-right: 0; }
 .action-btn:hover { color: #fff; transform: translateY(-1px); }
 @media (max-width: 1200px) {
-    .date-input { width: 180px; }
+    .date-input { max-width: 170px; }
     .soft-btn { padding: 10px 18px; }
     .grid-contracts-cols { min-width: 940px; }
-    .grid-head { font-size: 1.05rem; }
-    .grid-cell { font-size: 1rem; }
+    .grid-head { font-size: 1rem; }
+    .grid-cell { font-size: 0.96rem; }
 }
 </style>
 {% endblock %}
