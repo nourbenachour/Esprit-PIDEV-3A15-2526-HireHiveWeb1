@@ -674,12 +674,10 @@ class FrontofficeController extends AbstractController
         }
     }
 
-    #[Route('/frontoffice/entretiens', name: 'app_frontoffice_interviews')]
+    #[Route('/frontoffice/entretiens', name: 'app_frontoffice_interviews_alias')]
     public function interviews(): Response
     {
-        return $this->render('user/frontoffice/placeholder.html.twig', [
-            'page_title' => 'Entretiens',
-        ]);
+        return $this->redirectToRoute('app_frontoffice_interviews');
     }
 
     #[Route('/frontoffice/reclamations', name: 'app_frontoffice_reclamations')]

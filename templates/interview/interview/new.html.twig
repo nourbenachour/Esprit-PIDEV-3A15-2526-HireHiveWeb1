@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvel Entretien{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row g-3">
+        <div class="col-lg-3">
+            {% include 'interview/_sidebar.html.twig' %}
+        </div>
+        <div class="col-lg-9">
+            <div class="form-shell">
+            <h1 class="module-title mb-3">Planifier un entretien</h1>
+            <p class="text-muted mb-4">Complétez les champs obligatoires (*) pour enregistrer l'entretien.</p>
+
+            {{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                {{ form_label(form.candidateName, 'Nom du candidat *', {'label_attr': {'class': 'field-label'}}) }}
+                {{ form_widget(form.candidateName, {'attr': {'class': 'form-control soft-input', 'placeholder': 'Nom complet du candidat'}}) }}
+                {{ form_errors(form.candidateName) }}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                {{ form_label(form.companyName, 'Nom de l\'entreprise *', {'label_attr': {'class': 'field-label'}}) }}
+                {{ form_widget(form.companyName, {'attr': {'class': 'form-control soft-input', 'placeholder': 'Nom de l\'entreprise'}}) }}
+                {{ form_errors(form.companyName) }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.interviewDate, 'Date d\'entretien *', {'label_attr': {'class': 'field-label'}}) }}
+                {{ form_widget(form.interviewDate, {'attr': {'class': 'form-control soft-input'}}) }}
+                {{ form_errors(form.interviewDate) }}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                        {{ form_label(form.heureDebut, 'Heure début (HH:mm) *', {'label_attr': {'class': 'field-label'}}) }}
+                        {{ form_widget(form.heureDebut, {'attr': {'class': 'form-control soft-input'}}) }}
+                        {{ form_errors(form.heureDebut) }}
+                </div>
+                <div class="col-md-6 mb-3">
+                        {{ form_label(form.heureFin, 'Heure fin (HH:mm) *', {'label_attr': {'class': 'field-label'}}) }}
+                        {{ form_widget(form.heureFin, {'attr': {'class': 'form-control soft-input'}}) }}
+                        {{ form_errors(form.heureFin) }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                        {{ form_label(form.status, 'Statut *', {'label_attr': {'class': 'field-label'}}) }}
+                        {{ form_widget(form.status, {'attr': {'class': 'form-control soft-input'}}) }}
+                        {{ form_errors(form.status) }}
+                </div>
+                <div class="col-md-6 mb-3">
+                        {{ form_label(form.result, 'Résultat *', {'label_attr': {'class': 'field-label'}}) }}
+                        {{ form_widget(form.result, {'attr': {'class': 'form-control soft-input'}}) }}
+                        {{ form_errors(form.result) }}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.attendanceStatus, 'Statut de présence *', {'label_attr': {'class': 'field-label'}}) }}
+                {{ form_widget(form.attendanceStatus, {'attr': {'class': 'form-control soft-input'}}) }}
+                {{ form_errors(form.attendanceStatus) }}
+            </div>
+
+            <p class="help-line">Format heures: HH:mm (ex: 09:30). L'heure de fin doit être après l'heure de début.</p>
+
+            <div class="d-flex justify-content-end gap-2">
+                <button type="submit" class="btn soft-btn soft-btn-primary">Planifier</button>
+                <a href="{{ path('app_frontoffice_interviews') }}" class="btn soft-btn soft-btn-light">Annuler</a>
+            </div>
+
+            {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-shell { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 20px; padding: 24px; }
+.module-title { color: #0f1b3e; font-weight: 800; }
+.field-label { color: #6d28d9; font-weight: 800; font-size: 1.02rem; }
+.soft-input { border-radius: 14px; border: 1px solid #ccd3e3; min-height: 44px; }
+.help-line { color: #64748b; margin: 6px 0 14px; }
+.soft-btn { border-radius: 999px; padding: 10px 26px; font-weight: 700; border: 0; }
+.soft-btn-primary { background: linear-gradient(135deg, #6c2bd9, #8f4bff); color: #fff; box-shadow: 0 6px 16px rgba(108, 43, 217, 0.35); }
+.soft-btn-light { background: #efe9ff; color: #6d28d9; }
+</style>
+{% endblock %}

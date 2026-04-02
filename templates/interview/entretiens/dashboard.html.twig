@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Entretiens{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row g-3">
+        <div class="col-lg-3">
+            {% include 'interview/_sidebar.html.twig' %}
+        </div>
+        <div class="col-lg-9">
+            <div class="dashboard-shell p-3 p-md-4">
+                <h1 class="dashboard-title mb-3">Dashboard Entretiens</h1>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <article class="kpi-card h-100">
+                            <p class="kpi-label mb-1">Entretiens total</p>
+                            <p class="kpi-value mb-0">{{ totalInterviews }}</p>
+                        </article>
+                    </div>
+                    <div class="col-md-4">
+                        <article class="kpi-card h-100">
+                            <p class="kpi-label mb-1">Entretiens en attente</p>
+                            <p class="kpi-value mb-0">{{ pendingInterviews }}</p>
+                        </article>
+                    </div>
+                    <div class="col-md-4">
+                        <article class="kpi-card h-100">
+                            <p class="kpi-label mb-1">Contrats signes</p>
+                            <p class="kpi-value mb-0">{{ signedContracts }}</p>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-shell { background: #f7f8fc; border: 1px solid #dde3ef; border-radius: 18px; box-shadow: 0 4px 14px rgba(25, 39, 66, 0.08); }
+.dashboard-title { color: #ff6a00; font-size: 2.05rem; font-weight: 800; }
+.kpi-card { border: 1px solid #dbe2ee; background: #fcfdff; border-radius: 18px; padding: 30px 20px; text-align: center; box-shadow: 0 3px 10px rgba(31, 55, 94, 0.06); }
+.kpi-label { color: #60708d; font-size: 1.02rem; }
+.kpi-value { color: #081c45; font-weight: 800; font-size: 3rem; line-height: 1; }
+@media (max-width: 992px) {
+    .dashboard-title { font-size: 1.7rem; }
+    .kpi-value { font-size: 2.4rem; }
+}
+</style>
+{% endblock %}

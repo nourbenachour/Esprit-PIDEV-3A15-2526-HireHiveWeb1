@@ -33,7 +33,7 @@
             <a href="{{ path('app_frontoffice_home') }}" class="nav-link {% if current in ['app_frontoffice', 'app_frontoffice_home'] %}is-active{% endif %}">Accueil</a>
             <a href="{{ path('app_frontoffice_offers') }}" class="nav-link {% if current == 'app_frontoffice_offers' %}is-active{% endif %}">Offres</a>
             <a href="{{ path('app_frontoffice_trainings') }}" class="nav-link {% if current == 'app_frontoffice_trainings' %}is-active{% endif %}">Formations</a>
-            <a href="{{ path('app_frontoffice_interviews') }}" class="nav-link {% if current == 'app_frontoffice_interviews' %}is-active{% endif %}">Entretiens</a>
+            <a href="{{ path('app_frontoffice_interviews') }}" class="nav-link {% if current in ['app_frontoffice_interviews', 'app_frontoffice_interviews_alias', 'entretiens_index_legacy', 'entretiens_calendrier'] %}is-active{% endif %}">Entretiens</a>
             <a href="{{ path('app_frontoffice_reclamations') }}" class="nav-link {% if current == 'app_frontoffice_reclamations' %}is-active{% endif %}">Réclamations</a>
             <a href="{{ path('app_frontoffice_reviews') }}" class="nav-link {% if current == 'app_frontoffice_reviews' %}is-active{% endif %}">Avis</a>
             <a href="{{ path('app_frontoffice_posts') }}" class="nav-link {% if current == 'app_frontoffice_posts' %}is-active{% endif %}">Posts</a>

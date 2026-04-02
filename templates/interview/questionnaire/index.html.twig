@@ -1,0 +1,207 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Questionnaires{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row g-3">
+        <div class="col-lg-3">
+            {% include 'interview/_sidebar.html.twig' %}
+        </div>
+        <div class="col-lg-9">
+            <div class="module-card p-3 p-md-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <h1 class="module-title mb-0">Questionnaires d'entretien</h1>
+                    <a href="{{ path('questionnaire_new') }}" class="btn soft-btn soft-btn-primary">+ Ajouter un questionnaire</a>
+                </div>
+
+                {% if questionnairesByJobTitle is empty %}
+                    <div class="alert alert-info">Aucun questionnaire cree.</div>
+                {% else %}
+                    <div class="questions-grid">
+                        {% for jobTitle, questions in questionnairesByJobTitle %}
+                            {% set firstQuestion = questions|first %}
+                            <article class="question-card">
+                                <button
+                                    type="button"
+                                    class="job-title job-link open-questions-modal"
+                                    data-job-title="{{ jobTitle }}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#questionsModal"
+                                >
+                                    {{ jobTitle }}
+                                </button>
+                                <p class="meta-line">Nb Questions: {{ questions|length }}</p>
+                                <p class="meta-date">Cree le: {{ firstQuestion and firstQuestion.createdAt ? firstQuestion.createdAt|date('d/m/Y') : '-' }}</p>
+
+                                <ul class="d-none questions-source">
+                                    {% for question in questions %}
+                                        <li>{{ question.questionText ?: '-' }}</li>
+                                    {% endfor %}
+                                </ul>
+
+                                {% if firstQuestion %}
+                                    <div class="d-flex gap-2 mt-2">
+                                        <button
+                                            type="button"
+                                            class="action-pill open-questions-modal"
+                                            title="Voir"
+                                            data-job-title="{{ jobTitle }}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#questionsModal"
+                                        >
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <a href="{{ path('questionnaire_edit', {id: firstQuestion.id}) }}" class="action-pill" title="Modifier">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <form method="post" action="{{ path('questionnaire_delete', {id: firstQuestion.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer cette question ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ firstQuestion.id) }}">
+                                            <button type="submit" class="action-pill danger" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="questionsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content questions-modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title modal-job-title">Questions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="questions-list" id="questionsModalList"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn soft-btn soft-btn-primary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.module-card { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 18px; }
+.module-title { color: #ff6a00; font-weight: 800; font-size: 2rem; }
+.soft-btn { border-radius: 999px; padding: 8px 16px; font-weight: 700; font-size: 1rem; border: 0; }
+.soft-btn-primary { background: linear-gradient(135deg, #6c2bd9, #8f4bff); color: #fff; box-shadow: 0 6px 16px rgba(108, 43, 217, 0.35); }
+.questions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 12px; }
+.question-card { background: #fbfbff; border: 1px solid #e2e7f1; border-radius: 14px; padding: 16px; box-shadow: 0 2px 8px rgba(28, 44, 86, 0.06); transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; }
+.question-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(109, 40, 217, 0.14); border-color: #d0bcff; }
+.job-title { font-size: 1.05rem; font-weight: 800; color: #0f1b3e; margin-bottom: 8px; }
+.job-link { background: transparent; border: 0; padding: 0; cursor: pointer; text-align: left; }
+.job-link:hover { color: #6c2bd9; }
+.meta-line { color: #7c3aed; margin-bottom: 4px; font-size: 0.95rem; }
+.meta-date { color: #64748b; margin-bottom: 8px; font-size: 0.95rem; }
+.action-pill { width: 36px; height: 36px; border-radius: 999px; border: 1px solid #d2d8e8; display: inline-flex; align-items: center; justify-content: center; background: #fff; color: #5b6a86; text-decoration: none; }
+.action-pill:hover { background: #f2f4fb; color: #2b3b5a; }
+.action-pill.danger { color: #dc2626; }
+.questions-modal-content { background: #f6f7fb; border: 1px solid #dbe3ef; border-radius: 16px; }
+.modal-job-title { color: #0f1b3e; font-weight: 800; font-size: 1.4rem; }
+.questions-list { max-height: 520px; overflow: auto; padding-right: 6px; }
+.question-line { background: #f9fbff; border: 1px solid #dfe5f1; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; color: #24324f; font-size: 1.02rem; line-height: 1.45; }
+.modal-backdrop-fallback { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 1040; }
+</style>
+
+<script>
+(function () {
+    const modal = document.getElementById('questionsModal');
+    if (!modal) {
+        return;
+    }
+
+    const modalTitle = modal.querySelector('.modal-job-title');
+    const modalList = document.getElementById('questionsModalList');
+    const closeButtons = modal.querySelectorAll('[data-bs-dismiss="modal"]');
+    const bsModal = (window.bootstrap && window.bootstrap.Modal) ? new window.bootstrap.Modal(modal) : null;
+
+    function removeFallbackBackdrop() {
+        const backdrop = document.querySelector('.modal-backdrop-fallback');
+        if (backdrop) {
+            backdrop.remove();
+        }
+    }
+
+    function openModal() {
+        if (bsModal) {
+            bsModal.show();
+            return;
+        }
+
+        modal.style.display = 'block';
+        modal.classList.add('show');
+        modal.setAttribute('aria-modal', 'true');
+        modal.removeAttribute('aria-hidden');
+        document.body.classList.add('modal-open');
+
+        removeFallbackBackdrop();
+        const backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop-fallback';
+        backdrop.addEventListener('click', closeModal);
+        document.body.appendChild(backdrop);
+    }
+
+    function closeModal() {
+        if (bsModal) {
+            bsModal.hide();
+            return;
+        }
+
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        modal.removeAttribute('aria-modal');
+        document.body.classList.remove('modal-open');
+        removeFallbackBackdrop();
+    }
+
+    document.querySelectorAll('.open-questions-modal').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const card = button.closest('.question-card');
+            const jobTitle = button.getAttribute('data-job-title') || 'Questionnaire';
+            const source = card ? card.querySelectorAll('.questions-source li') : [];
+
+            modalTitle.textContent = 'Questions - ' + jobTitle;
+            modalList.innerHTML = '';
+
+            if (!source.length) {
+                modalList.innerHTML = '<div class="question-line">Aucune question disponible.</div>';
+                openModal();
+                return;
+            }
+
+            Array.from(source).forEach((item, index) => {
+                const line = document.createElement('div');
+                line.className = 'question-line';
+                line.textContent = (index + 1) + '. ' + (item.textContent || '-');
+                modalList.appendChild(line);
+            });
+
+            openModal();
+        });
+    });
+
+    closeButtons.forEach((btn) => {
+        btn.addEventListener('click', function () {
+            closeModal();
+        });
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
+})();
+</script>
+{% endblock %}

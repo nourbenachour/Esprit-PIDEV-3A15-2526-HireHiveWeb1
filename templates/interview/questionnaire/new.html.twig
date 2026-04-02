@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouvelle Question{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">Créer une Nouvelle Question</h1>
+
+            {{ form_start(form) }}
+
+            <div class="mb-3">
+                {{ form_label(form.jobTitle, 'Intitulé du poste') }}
+                {{ form_widget(form.jobTitle) }}
+                {{ form_errors(form.jobTitle) }}
+                <small class="form-text text-muted">Ex: Développeur Python, Chef de Projet, etc.</small>
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.questionText, 'Texte de la question') }}
+                {{ form_widget(form.questionText) }}
+                {{ form_errors(form.questionText) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.answerOptions, 'Options de réponse (optionnel)') }}
+                {{ form_widget(form.answerOptions) }}
+                {{ form_errors(form.answerOptions) }}
+                <small class="form-text text-muted">Format JSON: ["Réponse A", "Réponse B", "Réponse C"]</small>
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(form.correctAnswer, 'Réponse correcte (optionnel)') }}
+                {{ form_widget(form.correctAnswer) }}
+                {{ form_errors(form.correctAnswer) }}
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">💾 Créer</button>
+                <a href="{{ path('questionnaire_index') }}" class="btn btn-secondary">❌ Annuler</a>
+            </div>
+
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

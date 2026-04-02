@@ -1,0 +1,127 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail Entretien #{{ interviewView.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row g-3">
+        <div class="col-lg-3">
+            {% include 'interview/_sidebar.html.twig' %}
+        </div>
+        <div class="col-lg-9">
+            <div class="show-shell">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h1 class="module-title mb-0">Entretien #{{ interviewView.id }}</h1>
+                    <a href="{{ path('app_frontoffice_interviews') }}" class="btn soft-btn soft-btn-light">Retour</a>
+                </div>
+
+                <div class="card card-soft mb-3">
+                    <div class="card-body p-0">
+                        <table class="table table-soft align-middle mb-0">
+                            <tr>
+                                <th>Candidat</th>
+                                <td>{{ interviewView.candidateName }}</td>
+                            </tr>
+                            <tr>
+                                <th>Entreprise</th>
+                                <td>{{ interviewView.companyName }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date</th>
+                                <td>{{ interviewView.interviewDate ? interviewView.interviewDate|date('d/m/Y H:i') : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Horaire</th>
+                                <td>{{ interviewView.heureDebut|slice(0, 5) }} - {{ interviewView.heureFin|slice(0, 5) }}</td>
+                            </tr>
+                            <tr>
+                                <th>Statut</th>
+                                <td><span class="badge-soft badge-blue">{{ interviewView.status }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Résultat</th>
+                                <td><span class="badge-soft badge-slate">{{ interviewView.result }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Présence</th>
+                                <td><span class="badge-soft badge-gold">{{ interviewView.attendanceStatus }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Demandé le</th>
+                                <td>{{ interviewView.requestDate ? interviewView.requestDate|date('d/m/Y H:i') : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Décision le</th>
+                                <td>{{ interviewView.decisionDate ? interviewView.decisionDate|date('d/m/Y H:i') : 'En attente' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="action-wrap mb-2">
+                    <a href="{{ path('interview_edit', {id: interviewView.id}) }}" class="btn soft-btn btn-blue"><i class="bi bi-pencil-fill me-1"></i>Éditer</a>
+
+                    {% if interviewView.status == 'PENDING' %}
+                        <form method="post" action="{{ path('interview_accept', {id: interviewView.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('accept' ~ interviewView.id) }}">
+                            <button type="submit" class="btn soft-btn btn-green"><i class="bi bi-check-circle-fill me-1"></i>Accepter</button>
+                        </form>
+
+                        <form method="post" action="{{ path('interview_reject', {id: interviewView.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ interviewView.id) }}">
+                            <button type="submit" class="btn soft-btn btn-red"><i class="bi bi-x-circle-fill me-1"></i>Refuser</button>
+                        </form>
+                    {% endif %}
+
+                    {% if interviewView.attendanceStatus == 'PLANNED' %}
+                        <form method="post" action="{{ path('interview_complete', {id: interviewView.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('complete' ~ interviewView.id) }}">
+                            <button type="submit" class="btn soft-btn btn-cyan"><i class="bi bi-check2-all me-1"></i>Terminé</button>
+                        </form>
+
+                        <form method="post" action="{{ path('interview_no_show', {id: interviewView.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('noshow' ~ interviewView.id) }}">
+                            <button type="submit" class="btn soft-btn btn-gold"><i class="bi bi-ban me-1"></i>No-show</button>
+                        </form>
+                    {% endif %}
+
+                    {% if interviewView.status != 'CANCELLED' %}
+                        <form method="post" action="{{ path('interview_cancel', {id: interviewView.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ interviewView.id) }}">
+                            <button type="submit" class="btn soft-btn btn-outline-red"><i class="bi bi-dash-circle-fill me-1"></i>Annuler</button>
+                        </form>
+                    {% endif %}
+
+                    <button class="btn soft-btn btn-outline-slate" onclick="if(confirm('Êtes-vous sûr ?')) { document.getElementById('deleteForm').submit(); }"><i class="bi bi-trash3-fill me-1"></i>Supprimer</button>
+                </div>
+
+                <form id="deleteForm" method="post" action="{{ path('interview_delete', {id: interviewView.id}) }}" style="display: none;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ interviewView.id) }}">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.show-shell { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 20px; padding: 24px; }
+.module-title { color: #0f1b3e; font-weight: 800; }
+.card-soft { border: 1px solid #dbe2f1; border-radius: 14px; overflow: hidden; }
+.table-soft th { width: 42%; font-size: 1.02rem; color: #101828; font-weight: 800; padding: 14px 20px; background: #f8fafc; }
+.table-soft td { font-size: 1.02rem; color: #0f172a; padding: 14px 20px; }
+.badge-soft { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: .75rem; font-weight: 800; letter-spacing: .02em; }
+.badge-blue { background: #dff4ff; color: #0369a1; }
+.badge-slate { background: #e5e7eb; color: #475569; }
+.badge-gold { background: #fff3cd; color: #b45309; }
+.action-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.soft-btn { border-radius: 10px; padding: 8px 14px; font-weight: 700; border: 0; }
+.soft-btn-light { background: #efe9ff; color: #6d28d9; }
+.btn-blue { background: #0d6efd; color: #fff; }
+.btn-green { background: #198754; color: #fff; }
+.btn-red { background: #dc3545; color: #fff; }
+.btn-cyan { background: #0dcaf0; color: #083344; }
+.btn-gold { background: #ffc107; color: #5b3a00; }
+.btn-outline-red { background: #fff; color: #dc3545; border: 1px solid #f5c2c7; }
+.btn-outline-slate { background: #fff; color: #475569; border: 1px solid #cbd5e1; }
+</style>
+{% endblock %}

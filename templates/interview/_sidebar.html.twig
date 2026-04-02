@@ -1,0 +1,31 @@
+<div class="interview-sidebar card sidebar-shell">
+    <div class="card-body p-3">
+        <nav class="nav flex-column gap-2">
+            <a class="btn sidebar-btn text-start {% if app.request.attributes.get('_route') in ['app_frontoffice_interviews', 'app_frontoffice_interviews_alias', 'entretiens_index_legacy', 'interview_index'] %}active{% endif %}" href="{{ path('app_frontoffice_interviews') }}">
+                Entretiens
+            </a>
+            <a class="btn sidebar-btn text-start {% if app.request.attributes.get('_route') starts with 'contract_' or app.request.attributes.get('_route') == 'entretiens_contracts_redirect' %}active{% endif %}" href="{{ path('entretiens_contracts_redirect') }}">
+                Contrats
+            </a>
+            <a class="btn sidebar-btn text-start {% if app.request.attributes.get('_route') starts with 'questionnaire_' or app.request.attributes.get('_route') == 'entretiens_questionnaire_redirect' %}active{% endif %}" href="{{ path('entretiens_questionnaire_redirect') }}">
+                Questionnaires
+            </a>
+            <div class="sidebar-separator"></div>
+            <a class="btn sidebar-btn text-start {% if app.request.attributes.get('_route') == 'entretiens_calendrier' %}active{% endif %}" href="{{ path('entretiens_calendrier') }}">
+                Calendrier
+            </a>
+            <a class="btn sidebar-btn text-start {% if app.request.attributes.get('_route') == 'entretiens_dashboard' %}active{% endif %}" href="{{ path('entretiens_dashboard') }}">
+                Dashboard
+            </a>
+        </nav>
+
+    </div>
+</div>
+
+<style>
+.sidebar-shell { border: 1px solid #e2e7f1; border-radius: 20px; background: #f8f9fd; }
+.sidebar-btn { border: 0; border-radius: 999px; background: linear-gradient(135deg, #7c3aed, #9f5dff); color: #fff; font-weight: 700; font-size: 0.98rem; padding: 9px 16px; box-shadow: 0 5px 14px rgba(124, 58, 237, 0.25); }
+.sidebar-btn:hover, .sidebar-btn:focus { color: #fff; transform: translateY(-1px); }
+.sidebar-btn.active { background: linear-gradient(135deg, #6425c6, #8744f2); color: #fff; }
+.sidebar-separator { border-top: 1px solid #d3dae8; margin: 8px 0 10px; }
+</style>

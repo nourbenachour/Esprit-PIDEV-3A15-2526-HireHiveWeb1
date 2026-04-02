@@ -1,0 +1,152 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail Contrat #{{ contractView.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row g-3">
+        <div class="col-lg-3">
+            {% include 'interview/_sidebar.html.twig' %}
+        </div>
+        <div class="col-lg-9">
+            <h1 class="module-title mb-4">Détails du contrat</h1>
+
+            <div class="details-card">
+                <div class="p-4">
+                    <table class="table">
+                        <tr>
+                            <th>Candidat</th>
+                            <td>{{ contractView.candidateName }}</td>
+                        </tr>
+                        <tr>
+                            <th>Entreprise</th>
+                            <td>{{ contractView.companyName }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type de contrat</th>
+                            <td><span class="status-chip">{{ contractView.contractType }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Salaire annuel</th>
+                            <td><strong>{{ contractView.salary|number_format(2, ',', ' ') }} €</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Dates</th>
+                            <td>
+                                {{ contractView.startDate ? contractView.startDate|date('d/m/Y') : '-' }}
+                                →
+                                {{ contractView.endDate ? contractView.endDate|date('d/m/Y') : '-' }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Statut</th>
+                            <td><span class="status-chip">{{ contractView.status }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Signé le</th>
+                            <td>
+                                {% if contractView.signedAt and contractView.status == 'SIGNED' %}
+                                    {{ contractView.signedAt|date('d/m/Y à H:i') }}
+                                {% else %}
+                                    <em class="text-muted">Non signé</em>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% if contractView.signature %}
+                            <tr>
+                                <th>Signature</th>
+                                <td>
+                                    <img src="{{ contractView.signature }}" alt="Signature" style="max-height: 100px;">
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4 mb-4 d-flex flex-wrap gap-2">
+                <a href="{{ path('contract_edit', {id: contractView.id}) }}" class="btn soft-btn soft-btn-primary"><i class="bi bi-pencil-square"></i> Modifier</a>
+
+                {% if contractView.status == 'PENDING' %}
+                    <form method="post" action="{{ path('contract_send', {id: contractView.id}) }}" style="display: inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('send' ~ contractView.id) }}">
+                        <button type="submit" class="btn soft-btn soft-btn-primary"><i class="bi bi-send"></i> Envoyer</button>
+                    </form>
+                {% endif %}
+
+                {% if contractView.status == 'SENT' and not contractView.signature %}
+                    <button class="btn soft-btn soft-btn-primary" data-bs-toggle="modal" data-bs-target="#signModal"><i class="bi bi-pen"></i> Signer</button>
+                {% endif %}
+
+                {% if contractView.status == 'SENT' %}
+                    <form method="post" action="{{ path('contract_reject', {id: contractView.id}) }}" style="display: inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ contractView.id) }}">
+                        <button type="submit" class="btn soft-btn soft-btn-danger"><i class="bi bi-x-circle"></i> Refuser</button>
+                    </form>
+                {% endif %}
+
+                <button class="btn soft-btn soft-btn-light" onclick="if(confirm('Êtes-vous sûr ?')) { document.getElementById('deleteForm').submit(); }"><i class="bi bi-trash"></i> Supprimer</button>
+            </div>
+
+            <form id="deleteForm" method="post" action="{{ path('contract_delete', {id: contractView.id}) }}" style="display: none;">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contractView.id) }}">
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Signature -->
+<div class="modal fade" id="signModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Signer le Contrat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ path('contract_sign', {id: contractView.id}) }}">
+                <div class="modal-body">
+                    <input type="hidden" name="_token" value="{{ csrf_token('sign' ~ contractView.id) }}">
+                    <input type="hidden" name="signature" id="signatureInput">
+                    
+                    <p class="text-muted">Veuillez signer dans le cadre ci-dessous:</p>
+                    <canvas id="signaturePad" width="400" height="150" style="border: 1px solid #ccc; cursor: crosshair;"></canvas>
+                    <button type="button" class="btn btn-sm btn-warning mt-2" onclick="clearSignature()">Effacer</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">✅ Signer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Signature pad simple (canvas)
+const canvas = document.getElementById('signaturePad');
+const ctx = canvas.getContext('2d');
+let isDrawing = false;
+
+canvas.addEventListener('mousedown', (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+canvas.addEventListener('mousemove', (e) => { if (isDrawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } });
+canvas.addEventListener('mouseup', () => { isDrawing = false; document.getElementById('signatureInput').value = canvas.toDataURL(); });
+
+function clearSignature() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('signatureInput').value = '';
+}
+</script>
+
+<style>
+.module-title { color: #ff6a00; font-weight: 800; }
+.details-card { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 18px; }
+.details-card .table th { width: 220px; color: #1f2a44; }
+.status-chip { background: #ece8ff; color: #5b21b6; border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: 0.85rem; }
+.soft-btn { border-radius: 999px; padding: 10px 16px; font-weight: 700; border: 0; }
+.soft-btn-primary { background: linear-gradient(135deg, #6c2bd9, #8f4bff); color: #fff; box-shadow: 0 6px 16px rgba(108, 43, 217, 0.35); }
+.soft-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+.soft-btn-light { background: #efe9ff; color: #6d28d9; }
+.soft-btn i { margin-right: 6px; }
+</style>
+{% endblock %}

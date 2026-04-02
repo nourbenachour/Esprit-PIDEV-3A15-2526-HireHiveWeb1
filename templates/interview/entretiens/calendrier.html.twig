@@ -1,0 +1,132 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Calendrier des entretiens{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row g-3">
+        <div class="col-lg-3">
+            {% include 'interview/_sidebar.html.twig' %}
+        </div>
+        <div class="col-lg-9">
+            <div class="calendar-card p-3 p-md-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-2">
+                    <h1 class="calendar-title mb-0">Calendrier des entretiens</h1>
+
+                    <form method="get" class="d-flex align-items-center gap-2" id="calendarFilterForm" action="{{ path('entretiens_calendrier') }}">
+                        <a class="nav-month-btn" href="{{ path('entretiens_calendrier', {month: prevMonth}) }}" aria-label="Mois precedent">&#10094;</a>
+                        <select id="monthSelector" name="monthNumber" class="calendar-select">
+                            {% for m in monthOptions %}
+                                <option value="{{ m.value }}" {% if m.selected %}selected{% endif %}>{{ m.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="yearSelector" name="yearNumber" class="calendar-select year">
+                            {% for y in yearOptions %}
+                                <option value="{{ y.value }}" {% if y.selected %}selected{% endif %}>{{ y.value }}</option>
+                            {% endfor %}
+                        </select>
+                        <a class="nav-month-btn" href="{{ path('entretiens_calendrier', {month: nextMonth}) }}" aria-label="Mois suivant">&#10095;</a>
+                    </form>
+                </div>
+
+                <p class="calendar-subtitle mb-3">
+                    {% if plannedInterviews is empty %}
+                        Aucun entretien a venir pour le moment.
+                    {% else %}
+                        {{ plannedInterviews|length }} entretien(s) planifie(s) pour {{ calendarMonthLabel }}.
+                    {% endif %}
+                </p>
+
+                <div class="weekday-grid mb-2">
+                    <div>Lun</div>
+                    <div>Mar</div>
+                    <div>Mer</div>
+                    <div>Jeu</div>
+                    <div>Ven</div>
+                    <div>Sam</div>
+                    <div>Dim</div>
+                </div>
+
+                <div class="calendar-grid">
+                    {% for week in calendarWeeks %}
+                        {% for day in week %}
+                            <div class="day-cell {% if not day.inCurrentMonth %}outside{% endif %} {% if day.isToday %}today{% endif %}">
+                                <div class="day-number">{{ day.dayNumber }}</div>
+
+                                {% if day.interviews|length > 0 %}
+                                    <div class="day-events">
+                                        {% for iv in day.interviews|slice(0, 2) %}
+                                            <a class="event-chip" href="{{ path('interview_show', {id: iv.id}) }}" title="{{ iv.candidateName }} - {{ iv.companyName }} ({{ iv.timeRange }})">
+                                                {{ iv.timeRange }}
+                                            </a>
+                                        {% endfor %}
+                                        {% if day.interviews|length > 2 %}
+                                            <div class="more-events">+{{ day.interviews|length - 2 }} autre(s)</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.calendar-card { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 18px; }
+.calendar-title { color: #ff6a00; font-weight: 800; font-size: 2rem; }
+.calendar-subtitle { color: #6b7f9e; font-size: 1rem; }
+.calendar-select { height: 40px; border-radius: 10px; border: 1px solid #cfd7e8; background: #fff; padding: 0 12px; min-width: 180px; font-weight: 700; color: #1b2742; }
+.calendar-select.year { min-width: 120px; }
+.nav-month-btn { width: 42px; height: 42px; border-radius: 50%; border: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #6c2bd9, #8f4bff); color: #fff; text-decoration: none; box-shadow: 0 4px 12px rgba(108, 43, 217, 0.35); }
+.weekday-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.weekday-grid > div { background: #e7ebf2; border: 1px solid #d6deea; border-radius: 14px; min-height: 40px; display: flex; align-items: center; justify-content: center; color: #60708d; font-size: 0.95rem; font-weight: 600; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.day-cell { background: #edf1f7; border: 1px solid #dbe2ee; border-radius: 12px; min-height: 120px; padding: 8px; position: relative; }
+.day-cell.outside { background: #f8fafd; color: #a8b4c8; border-color: #e7ecf4; }
+.day-cell.outside .day-number { color: #a8b4c8; }
+.day-cell.outside .more-events { color: #9aa8be; }
+.day-cell.today { border: 2px solid #6ba6f6; background: #e5f0ff; }
+.day-number { text-align: right; font-weight: 800; color: #1d2a44; font-size: 1rem; }
+.day-events { margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+.event-chip { border-radius: 999px; background: #ece8ff; color: #5b21b6; font-size: 0.9rem; padding: 3px 8px; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.event-chip:hover { background: #ddd2ff; color: #4b1ea0; }
+.more-events { font-size: 0.85rem; color: #5f6f8a; font-weight: 700; }
+@media (max-width: 1100px) {
+    .weekday-grid > div { font-size: 0.85rem; }
+    .day-cell { min-height: 98px; }
+    .day-number { font-size: 0.9rem; }
+    .event-chip { font-size: 0.75rem; }
+}
+</style>
+
+<script>
+(function () {
+    const monthSelector = document.getElementById('monthSelector');
+    const yearSelector = document.getElementById('yearSelector');
+    const form = document.getElementById('calendarFilterForm');
+    if (!monthSelector || !yearSelector) {
+        return;
+    }
+
+    const redirectToSelectedMonth = function () {
+        const month = String(monthSelector.value).padStart(2, '0');
+        const year = yearSelector.value;
+        const monthParam = `${year}-${month}`;
+        window.location.href = '{{ path('entretiens_calendrier') }}?month=' + encodeURIComponent(monthParam);
+    };
+
+    monthSelector.addEventListener('change', redirectToSelectedMonth);
+    yearSelector.addEventListener('change', redirectToSelectedMonth);
+
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            redirectToSelectedMonth();
+        });
+    }
+})();
+</script>
+{% endblock %}
