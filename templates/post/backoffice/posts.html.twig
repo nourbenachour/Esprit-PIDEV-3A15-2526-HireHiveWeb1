@@ -1,0 +1,1570 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Gestion des Posts - Backoffice{% endblock %}
+
+{% block backoffice_content %}
+{% set currentUser = app.user %}
+{% set adminInitials = currentUser ? (currentUser.firstName|default('A'))|first ~ (currentUser.lastName|default('D'))|first : 'AD' %}
+{% set totalComments = 0 %}
+{% set totalReactions = 0 %}
+{% for post in posts %}
+    {% set totalComments = totalComments + (post.comments|length) %}
+    {% set totalReactions = totalReactions + (post.reactions|length) %}
+{% endfor %}
+
+<style>
+.dashboard-content {
+    background: #0f1117 !important;
+}
+
+.dashboard-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    max-height: 100vh;
+}
+
+.bo-feed-page {
+    margin: -20px;
+    padding: 22px 24px 28px;
+    min-height: calc(100vh - 88px);
+    background: #0f1117;
+    color: #e5e7eb;
+}
+
+.bo-feed-layout {
+    max-width: 900px;
+    margin: 0 auto;
+    display: block;
+}
+
+.bo-side {
+    display: none;
+}
+
+.bo-panel,
+.bo-post,
+.bo-composer {
+    background: #171b24;
+    border: 1px solid #262c39;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.bo-profile-cover {
+    height: 72px;
+    background: linear-gradient(90deg, #263347 0%, #344761 52%, #42526b 100%);
+}
+
+.bo-profile-body {
+    padding: 0 16px 16px;
+}
+
+.bo-profile-avatar {
+    width: 74px;
+    height: 74px;
+    margin-top: -36px;
+    border-radius: 50%;
+    border: 4px solid #171b24;
+    background: #0f766e;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 31px;
+    font-weight: 800;
+}
+
+.bo-profile-name {
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: 800;
+    color: #f3f4f6;
+}
+
+.bo-profile-role,
+.bo-profile-mail,
+.bo-panel-note {
+    color: #9ca3af;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.bo-profile-mail {
+    margin-top: 8px;
+    word-break: break-word;
+}
+
+.bo-panel-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid #222836;
+    color: #d1d5db;
+    font-size: 13px;
+}
+
+.bo-panel-row strong {
+    color: #c4b5fd;
+}
+
+.bo-shortcuts {
+    padding: 10px 0;
+}
+
+.bo-shortcut {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    color: #d1d5db;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.bo-shortcut:hover {
+    background: #1b2130;
+}
+
+.bo-feed-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.bo-flash {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid #2a3242;
+    font-size: 13px;
+    font-weight: 700;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.bo-flash.is-hiding {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.bo-flash-success {
+    background: rgba(6, 78, 59, 0.28);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #a7f3d0;
+}
+
+.bo-flash-danger {
+    background: rgba(127, 29, 29, 0.28);
+    border-color: rgba(248, 113, 113, 0.3);
+    color: #fecaca;
+}
+
+.bo-composer {
+    padding: 14px 16px 10px;
+}
+
+.bo-composer-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bo-avatar-sm,
+.bo-post-avatar,
+.bo-comment-avatar {
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.bo-avatar-sm {
+    width: 46px;
+    height: 46px;
+    background: #0f766e;
+    color: #fff;
+    font-size: 20px;
+}
+
+.bo-composer-link {
+    flex: 1;
+    height: 46px;
+    border-radius: 999px;
+    border: 1px solid #364152;
+    background: #141923;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    color: #cbd5e1;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.bo-composer-link:hover {
+    background: #1f1733;
+}
+
+.bo-composer-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.bo-composer-actions a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    color: #9ca3af;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.bo-composer-actions a:hover {
+    background: #241b3a;
+    color: #f3e8ff;
+}
+
+.bo-sort {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+.bo-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 12px;
+    padding: 14px 16px;
+}
+
+.bo-search-input,
+.bo-sort-select {
+    width: 100%;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid #364152;
+    background: #121720;
+    color: #f3f4f6;
+    padding: 0 14px;
+    font-size: 14px;
+}
+
+.bo-search-input:focus,
+.bo-sort-select:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.14);
+}
+
+.bo-sort-line {
+    flex: 1;
+    height: 1px;
+    background: #2f3746;
+}
+
+.bo-post {
+    overflow: visible;
+}
+
+.bo-post-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 16px 12px;
+}
+
+.bo-post-avatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    color: #fff;
+    font-size: 18px;
+}
+
+.bo-post-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.bo-post-name-row,
+.bo-comment-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.bo-post-name,
+.bo-comment-name {
+    color: #f3f4f6;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.bo-meta {
+    margin-top: 4px;
+    color: #9ca3af;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.bo-badge-admin,
+.bo-badge-role,
+.bo-badge-vis,
+.bo-badge-soft {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.bo-badge-admin {
+    background: rgba(139, 92, 246, 0.2);
+    color: #d8b4fe;
+}
+
+.bo-badge-role {
+    background: #1f2532;
+    color: #cbd5e1;
+}
+
+.bo-badge-vis {
+    background: rgba(34, 197, 94, 0.12);
+    color: #86efac;
+}
+
+.bo-badge-soft {
+    background: #1f2532;
+    color: #9ca3af;
+}
+
+.bo-menu-wrap {
+    position: relative;
+}
+
+.bo-icon-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    border-radius: 50%;
+    color: #9ca3af;
+}
+
+.bo-icon-btn:hover {
+    background: #241b3a;
+    color: #f3e8ff;
+}
+
+.bo-menu {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    min-width: 170px;
+    padding: 8px;
+    background: #151922;
+    border: 1px solid #2b3240;
+    border-radius: 12px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.26);
+    display: none;
+    z-index: 20;
+}
+
+.bo-reaction-menu {
+    top: auto;
+    right: auto;
+    left: -2px;
+    bottom: calc(100% + 10px);
+    min-width: auto;
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: rgba(21, 25, 34, 0.96);
+    border-color: #364152;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
+}
+
+.bo-reaction-options {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bo-reaction-menu form,
+.bo-reaction-menu button {
+    width: auto !important;
+}
+
+.bo-reaction-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.bo-reaction-pill:hover {
+    transform: translateY(-2px) scale(1.04);
+}
+
+.bo-reaction-pill.like {
+    background: linear-gradient(180deg, #60a5fa, #2563eb);
+}
+
+.bo-reaction-pill.love {
+    background: linear-gradient(180deg, #fb7185, #e11d48);
+}
+
+.bo-reaction-pill.dislike {
+    background: linear-gradient(180deg, #f59e0b, #d97706);
+}
+
+.bo-menu.is-open {
+    display: block;
+}
+
+.bo-menu form,
+.bo-menu button,
+.bo-menu a {
+    width: 100%;
+}
+
+.bo-menu-action {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: #d1d5db;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.bo-menu-action:hover {
+    background: #241b3a;
+}
+
+.bo-menu-action.is-danger {
+    color: #fca5a5;
+}
+
+.bo-post-body {
+    padding: 0 16px 14px;
+}
+
+.bo-post-title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #f3f4f6;
+    font-weight: 800;
+}
+
+.bo-post-text {
+    margin: 0;
+    color: #d1d5db;
+    font-size: 14px;
+    line-height: 1.65;
+    word-break: break-word;
+}
+
+.bo-post-image {
+    display: block;
+    width: 100%;
+    max-height: 430px;
+    object-fit: cover;
+    margin-top: 12px;
+    border-top: 1px solid #252c38;
+    border-bottom: 1px solid #252c38;
+    background: #0b0f16;
+}
+
+.bo-stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+.bo-stats-left,
+.bo-stats-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.bo-divider {
+    margin: 0 16px;
+    height: 1px;
+    background: #252c38;
+}
+
+.bo-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px 10px;
+}
+
+.bo-action-btn,
+.bo-action-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.bo-action-btn:hover,
+.bo-action-link:hover {
+    background: #1b2130;
+}
+
+.bo-comments {
+    padding: 0 16px 16px;
+}
+
+.bo-comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.bo-comment-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.bo-comment-avatar {
+    width: 36px;
+    height: 36px;
+    background: #283140;
+    color: #dbeafe;
+    font-size: 12px;
+}
+
+.bo-comment-main {
+    flex: 1;
+    min-width: 0;
+    padding-top: 1px;
+}
+
+.bo-comment-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.bo-comment-top-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.bo-comment-bubble {
+    background: #11161f;
+    border: 1px solid #242b38;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.bo-comment-text {
+    margin: 4px 0 0;
+    color: #d1d5db;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.bo-comment-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.bo-comment-date {
+    color: #8b93a4;
+    font-size: 12px;
+}
+
+.bo-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 10, 17, 0.72);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 80;
+}
+
+.bo-modal-backdrop.is-open {
+    display: flex;
+}
+
+.bo-modal {
+    width: min(100%, 420px);
+    background: #171b24;
+    border: 1px solid #2b3240;
+    border-radius: 18px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+}
+
+.bo-modal-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px 10px;
+}
+
+.bo-modal-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: rgba(139, 92, 246, 0.16);
+    color: #d8b4fe;
+    font-size: 18px;
+}
+
+.bo-modal-title {
+    margin: 0;
+    color: #f3f4f6;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.bo-modal-body {
+    padding: 0 20px 18px;
+    color: #aeb6c4;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.bo-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 0 20px 20px;
+}
+
+.bo-modal-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.bo-modal-btn-secondary {
+    background: #222838;
+    color: #d1d5db;
+}
+
+.bo-modal-btn-danger {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff;
+}
+
+.bo-inline-edit {
+    display: none;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.bo-inline-edit.is-open {
+    display: flex;
+}
+
+.bo-inline-edit textarea,
+.bo-comment-form textarea {
+    flex: 1;
+    min-height: 44px;
+    resize: vertical;
+    border: 1px solid #364152;
+    border-radius: 10px;
+    background: #121720;
+    color: #f3f4f6;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.bo-inline-edit textarea:focus,
+.bo-comment-form textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
+}
+
+.bo-inline-edit button,
+.bo-comment-form button {
+    align-self: flex-end;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.bo-comment-composer {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.bo-comment-composer.is-targeted .bo-comment-form textarea {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+.bo-comment-form textarea.is-targeted-field {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+.bo-comment-form {
+    flex: 1;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.bo-comment-submit.is-hidden {
+    display: none;
+}
+
+.bo-post.is-hidden {
+    display: none;
+}
+
+.bo-empty {
+    padding: 20px 16px;
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .bo-feed-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .bo-side {
+        position: static;
+    }
+
+    .bo-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .bo-comment-form,
+    .bo-inline-edit {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .bo-inline-edit button,
+    .bo-comment-form button {
+        align-self: stretch;
+    }
+}
+</style>
+
+<div class="bo-feed-page">
+    <div class="bo-feed-layout">
+        <aside class="bo-side">
+            
+        </aside>
+
+        <main class="bo-feed-main">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="bo-flash {{ label == 'success' ? 'bo-flash-success' : 'bo-flash-danger' }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            <section class="bo-composer">
+                <div class="bo-composer-top">
+                    <div class="bo-post-avatar">{{ adminInitials|upper }}</div>
+                    <a href="{{ path('app_backoffice_posts_new') }}" class="bo-composer-link">Commencer un post</a>
+                </div>
+                <div class="bo-composer-actions">
+                    <a href="{{ path('app_backoffice_posts_new') }}"><i class="bi bi-play-btn-fill"></i> Vidéo</a>
+                    <a href="{{ path('app_backoffice_posts_new') }}"><i class="bi bi-image-fill"></i> Photo</a>
+                    <a href="{{ path('app_backoffice_posts_new') }}"><i class="bi bi-pencil-square"></i> Article</a>
+                </div>
+            </section>
+
+            <div class="bo-sort">
+                <div class="bo-sort-line"></div>
+            </div>
+
+            <section class="bo-composer bo-toolbar">
+                <input
+                    type="search"
+                    id="bo-post-search"
+                    class="bo-search-input"
+                    placeholder="Rechercher par titre de post..."
+                    aria-label="Rechercher un post"
+                >
+                <select id="bo-post-sort" class="bo-sort-select" aria-label="Trier les posts">
+                    <option value="newest">Plus recent</option>
+                    <option value="oldest">Plus ancien</option>
+                    <option value="title-asc">Titre A a Z</option>
+                    <option value="title-desc">Titre Z a A</option>
+                    <option value="comments-desc">Commentaires</option>
+                    <option value="reactions-desc">Reactions</option>
+                </select>
+            </section>
+
+            {% for post in posts %}
+                {% set author = post.id_user %}
+                {% set authorRole = author ? author.role|upper : 'UNKNOWN' %}
+                {% set authorInitials = author ? (author.firstName|default('?'))|first ~ (author.lastName|default('?'))|first : '??' %}
+                {% set isAdminPost = authorRole == 'ADMIN' or authorRole == 'ROLE_ADMIN' %}
+                {% set likes = post.reactions|filter(r => r.reactionType == 'LIKE')|length %}
+                {% set loves = post.reactions|filter(r => r.reactionType == 'LOVE')|length %}
+                {% set dislikes = post.reactions|filter(r => r.reactionType == 'DISLIKE')|length %}
+                {% set totalPostReactions = likes + loves + dislikes %}
+
+                <article
+                    class="bo-post"
+                    id="post-{{ post.idPost }}"
+                    data-post-id="{{ post.idPost }}"
+                    data-title="{{ post.title|lower }}"
+                    data-date="{{ post.createdAt|date('U') }}"
+                    data-comments="{{ post.comments|length }}"
+                    data-reactions="{{ totalPostReactions }}"
+                >
+                    <div class="bo-post-header">
+                        <div class="bo-post-avatar">{{ authorInitials|upper }}</div>
+                        <div class="bo-post-main">
+                            <div class="bo-post-name-row">
+                                <span class="bo-post-name">{{ author ? author.firstName ~ ' ' ~ author.lastName : 'Utilisateur inconnu' }}</span>
+                                {% if isAdminPost %}
+                                    <span class="bo-badge-admin"><i class="bi bi-shield-fill-check"></i> Admin</span>
+                                {% else %}
+                                    <span class="bo-badge-role">{{ authorRole|replace({'ROLE_': ''}) }}</span>
+                                {% endif %}
+                                <span class="bo-badge-vis">{{ post.visibility }}</span>
+                            </div>
+                            <div class="bo-meta"> {{ post.createdAt|date('d/m/Y H:i') }}</div>
+                        </div>
+                        <div class="bo-menu-wrap">
+                            <button type="button" class="bo-icon-btn" data-menu-toggle="post-menu-{{ post.idPost }}"><i class="bi bi-three-dots"></i></button>
+                            <div class="bo-menu" id="post-menu-{{ post.idPost }}">
+                                <a href="{{ path('app_backoffice_posts_edit', {id: post.idPost}) }}" class="bo-menu-action"><i class="bi bi-pencil"></i> Modifier le post</a>
+                                <form
+                                    method="post"
+                                    action="{{ path('app_backoffice_posts_delete', {id: post.idPost}) }}"
+                                    class="js-delete-form"
+                                    data-delete-kind="post"
+                                    data-delete-label="ce post et tout son contenu"
+                                >
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_post_' ~ post.idPost) }}">
+                                    <button type="submit" class="bo-menu-action is-danger"><i class="bi bi-trash"></i> Supprimer le post</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bo-post-body">
+                        <h3 class="bo-post-title">{{ post.title }}</h3>
+                        <p class="bo-post-text">{{ post.content|nl2br }}</p>
+                    </div>
+
+                    {% if post.imageUrl is not empty %}
+                        {% set postImageSrc = post.imageUrl starts with 'http' ? post.imageUrl : asset(post.imageUrl) %}
+                        <img src="{{ postImageSrc }}" alt="Image du post" class="bo-post-image">
+                    {% endif %}
+
+                    <div class="bo-stats">
+                        <div class="bo-stats-left">
+                            <span data-reaction-count="like"><i class="bi bi-hand-thumbs-up-fill" style="color:#60a5fa;"></i> {{ likes }}</span>
+                            <span data-reaction-count="love"><i class="bi bi-heart-fill" style="color:#f87171;"></i> {{ loves }}</span>
+                            <span data-reaction-count="dislike"><i class="bi bi-hand-thumbs-down-fill" style="color:#fbbf24;"></i> {{ dislikes }}</span>
+                        </div>
+                        <div class="bo-stats-right">
+                            <span data-comment-count>{{ post.comments|length }} commentaire{{ post.comments|length > 1 ? 's' : '' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="bo-divider"></div>
+
+                    <div class="bo-actions">
+                        <div class="bo-menu-wrap">
+                            <button type="button" class="bo-action-btn" data-menu-toggle="reaction-menu-{{ post.idPost }}"><i class="bi bi-emoji-smile"></i> Réagir</button>
+                            <div class="bo-menu bo-reaction-menu" id="reaction-menu-{{ post.idPost }}">
+                                <div class="bo-reaction-options">
+                                    <form method="post" action="{{ path('app_backoffice_reaction_toggle', {postId: post.idPost, type: 'LIKE'}) }}" class="js-reaction-form" data-post-id="{{ post.idPost }}">
+                                        <button type="submit" class="bo-reaction-pill like" title="Like"><i class="bi bi-hand-thumbs-up-fill"></i></button>
+                                    </form>
+                                    <form method="post" action="{{ path('app_backoffice_reaction_toggle', {postId: post.idPost, type: 'LOVE'}) }}" class="js-reaction-form" data-post-id="{{ post.idPost }}">
+                                        <button type="submit" class="bo-reaction-pill love" title="J'adore"><i class="bi bi-heart-fill"></i></button>
+                                    </form>
+                                    <form method="post" action="{{ path('app_backoffice_reaction_toggle', {postId: post.idPost, type: 'DISLIKE'}) }}" class="js-reaction-form" data-post-id="{{ post.idPost }}">
+                                        <button type="submit" class="bo-reaction-pill dislike" title="Dislike"><i class="bi bi-hand-thumbs-down-fill"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="bo-action-btn" data-comment-focus="{{ post.idPost }}"><i class="bi bi-chat-left-text"></i> Commenter</button>
+                    </div>
+
+                    <div class="bo-comments" id="comments-{{ post.idPost }}">
+                        <div class="bo-comments-list" data-comments-list>
+                            {% for comment in post.comments %}
+                                {% set cUser = comment.user %}
+                                {% set cRole = cUser ? cUser.role|upper : 'UNKNOWN' %}
+                                {% set cInitials = cUser ? (cUser.firstName|default('?'))|first ~ (cUser.lastName|default('?'))|first : '??' %}
+                                {% set isAdminComment = cRole == 'ADMIN' or cRole == 'ROLE_ADMIN' %}
+                                <div class="bo-comment-item">
+                                    <div class="bo-comment-avatar">{{ cInitials|upper }}</div>
+                                    <div class="bo-comment-main">
+                                        <div class="bo-comment-top">
+                                            <div class="bo-comment-name-row">
+                                                <span class="bo-comment-name">{{ cUser ? cUser.firstName ~ ' ' ~ cUser.lastName : 'Utilisateur inconnu' }}</span>
+                                                {% if isAdminComment %}
+                                                    <span class="bo-badge-admin"><i class="bi bi-shield-fill-check"></i> Admin</span>
+                                                {% else %}
+                                                    <span class="bo-badge-role">{{ cRole|replace({'ROLE_': ''}) }}</span>
+                                                {% endif %}
+                                                {% if comment.isEdited %}
+                                                    <span class="bo-badge-soft" data-edited-badge="true">Modifié</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="bo-comment-top-right">
+                                                <span class="bo-comment-date" data-comment-date>{{ (comment.isEdited ? comment.updated_at : comment.createdAt)|date('d/m/Y H:i') }}</span>
+                                                <div class="bo-menu-wrap">
+                                                    <button type="button" class="bo-icon-btn" data-menu-toggle="comment-menu-{{ comment.idComment }}"><i class="bi bi-three-dots"></i></button>
+                                                    <div class="bo-menu" id="comment-menu-{{ comment.idComment }}">
+                                                        <button type="button" class="bo-menu-action" data-edit-toggle="comment-edit-{{ comment.idComment }}"><i class="bi bi-pencil"></i> Modifier le commentaire</button>
+                                                        <form
+                                                            method="post"
+                                                            action="{{ path('app_backoffice_comment_delete', {id: comment.idComment}) }}"
+                                                            class="js-delete-form"
+                                                            data-delete-kind="comment"
+                                                            data-delete-label="ce commentaire"
+                                                        >
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ comment.idComment) }}">
+                                                            <button type="submit" class="bo-menu-action is-danger"><i class="bi bi-trash"></i> Supprimer le commentaire</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="bo-comment-bubble">
+                                            <p class="bo-comment-text">{{ comment.content|nl2br }}</p>
+                                        </div>
+                                        <form method="post" action="{{ path('app_backoffice_comment_edit', {id: comment.idComment}) }}" id="comment-edit-{{ comment.idComment }}" class="bo-inline-edit js-comment-edit-form">
+                                            <textarea name="comment_content" rows="2">{{ comment.content }}</textarea>
+                                            <button type="submit">Enregistrer</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="bo-empty" data-empty-comments>Aucun commentaire pour ce post.</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="bo-comment-composer">
+                            <div class="bo-comment-avatar">{{ adminInitials|upper }}</div>
+                            {{ form_start(commentForms[post.idPost], {'attr': {'class': 'bo-comment-form js-comment-form', 'data-post-id': post.idPost}}) }}
+                                {{ form_widget(commentForms[post.idPost].content, {'attr': {'placeholder': 'Ajouter un commentaire admin...', 'rows': 1, 'id': 'comment-input-' ~ post.idPost, 'data-comment-input': post.idPost}}) }}
+                                <button type="submit" class="bo-comment-submit is-hidden" data-comment-submit>Publier</button>
+                            {{ form_end(commentForms[post.idPost]) }}
+                        </div>
+                    </div>
+                </article>
+            {% else %}
+                <section class="bo-panel bo-empty">Aucun post pour le moment.</section>
+            {% endfor %}
+        </main>
+    </div>
+</div>
+
+<div class="bo-modal-backdrop" id="delete-modal" aria-hidden="true">
+    <div class="bo-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+        <div class="bo-modal-head">
+            <div class="bo-modal-icon"><i class="bi bi-trash3"></i></div>
+            <h3 class="bo-modal-title" id="delete-modal-title">Confirmer la suppression</h3>
+        </div>
+        <div class="bo-modal-body" id="delete-modal-text">
+            Cette action va supprimer l'element selectionne.
+        </div>
+        <div class="bo-modal-actions">
+            <button type="button" class="bo-modal-btn bo-modal-btn-secondary" id="delete-modal-cancel">Annuler</button>
+            <button type="button" class="bo-modal-btn bo-modal-btn-danger" id="delete-modal-confirm">Supprimer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const deleteModal = document.getElementById('delete-modal');
+const deleteModalText = document.getElementById('delete-modal-text');
+const deleteModalCancel = document.getElementById('delete-modal-cancel');
+const deleteModalConfirm = document.getElementById('delete-modal-confirm');
+let pendingDeleteForm = null;
+
+function closeOpenMenus() {
+    document.querySelectorAll('.bo-menu.is-open').forEach(function (opened) {
+        opened.classList.remove('is-open');
+    });
+}
+
+function showTransientFlash(message, type) {
+    const container = document.querySelector('.bo-feed-main');
+    if (!container) {
+        return;
+    }
+
+    const flash = document.createElement('div');
+    flash.className = 'bo-flash ' + (type === 'danger' ? 'bo-flash-danger' : 'bo-flash-success');
+    flash.textContent = message;
+    container.prepend(flash);
+
+    window.setTimeout(function () {
+        flash.classList.add('is-hiding');
+        window.setTimeout(function () {
+            flash.remove();
+        }, 320);
+    }, 4200);
+}
+
+function autoHideExistingFlashes() {
+    document.querySelectorAll('.bo-flash').forEach(function (flash, index) {
+        window.setTimeout(function () {
+            flash.classList.add('is-hiding');
+            window.setTimeout(function () {
+                flash.remove();
+            }, 320);
+        }, 3600 + (index * 180));
+    });
+}
+
+function updateCommentCount(postEl, count) {
+    const node = postEl.querySelector('[data-comment-count]');
+    if (!node) {
+        return;
+    }
+
+    node.textContent = count + ' commentaire' + (count > 1 ? 's' : '');
+}
+
+function ensureEmptyCommentsState(postEl) {
+    const list = postEl.querySelector('[data-comments-list]');
+    if (!list) {
+        return;
+    }
+
+    const hasComments = list.querySelector('.bo-comment-item');
+    const existingEmpty = list.querySelector('[data-empty-comments]');
+
+    if (hasComments) {
+        if (existingEmpty) {
+            existingEmpty.remove();
+        }
+
+        return;
+    }
+
+    if (!existingEmpty) {
+        const empty = document.createElement('div');
+        empty.className = 'bo-empty';
+        empty.setAttribute('data-empty-comments', '');
+        empty.textContent = 'Aucun commentaire pour ce post.';
+        list.appendChild(empty);
+    }
+}
+
+function ensurePostsEmptyState() {
+    const container = document.querySelector('.bo-feed-main');
+    if (!container) {
+        return;
+    }
+
+    const posts = container.querySelectorAll('.bo-post[data-post-id]');
+    let emptyState = container.querySelector('[data-posts-empty]');
+
+    if (posts.length > 0) {
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        return;
+    }
+
+    if (!emptyState) {
+        emptyState = document.createElement('section');
+        emptyState.className = 'bo-panel bo-empty';
+        emptyState.setAttribute('data-posts-empty', '');
+        emptyState.textContent = 'Aucun post pour le moment.';
+        container.appendChild(emptyState);
+    }
+}
+
+function openDeleteModal(form) {
+    pendingDeleteForm = form;
+    const label = form.getAttribute('data-delete-label') || 'cet element';
+    deleteModalText.textContent = 'Cette action supprimera definitivement ' + label + '.';
+    deleteModal.classList.add('is-open');
+    deleteModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeDeleteModal() {
+    pendingDeleteForm = null;
+    deleteModal.classList.remove('is-open');
+    deleteModal.setAttribute('aria-hidden', 'true');
+}
+
+async function submitDeleteForm(form) {
+    const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: new FormData(form)
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+        showTransientFlash(data.message || 'Suppression impossible.', 'danger');
+        return;
+    }
+
+    const deleteKind = form.getAttribute('data-delete-kind');
+
+    if (deleteKind === 'post') {
+        const postEl = form.closest('.bo-post');
+        if (postEl) {
+            postEl.remove();
+        }
+
+        ensurePostsEmptyState();
+        applyPostFilters();
+    }
+
+    if (deleteKind === 'comment') {
+        const postEl = form.closest('.bo-post');
+        const commentItem = form.closest('.bo-comment-item');
+
+        if (commentItem) {
+            commentItem.remove();
+        }
+
+        if (postEl) {
+            const count = postEl.querySelectorAll('.bo-comment-item').length;
+            updateCommentCount(postEl, count);
+            postEl.dataset.comments = String(count);
+            ensureEmptyCommentsState(postEl);
+        }
+
+        applyPostFilters();
+    }
+
+    showTransientFlash(data.message || 'Element supprime.', 'success');
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function createCommentNode(comment) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'bo-comment-item';
+    wrapper.innerHTML = `
+        <div class="bo-comment-avatar">${escapeHtml(comment.authorInitials)}</div>
+        <div class="bo-comment-main">
+            <div class="bo-comment-top">
+                <div class="bo-comment-name-row">
+                    <span class="bo-comment-name">${escapeHtml(comment.authorName)}</span>
+                    <span class="bo-badge-admin"><i class="bi bi-shield-fill-check"></i> Admin</span>
+                </div>
+                <div class="bo-comment-top-right">
+                    <span class="bo-comment-date" data-comment-date>${escapeHtml(comment.createdAt)}</span>
+                    <div class="bo-menu-wrap">
+                        <button type="button" class="bo-icon-btn" data-menu-toggle="comment-menu-${comment.id}"><i class="bi bi-three-dots"></i></button>
+                        <div class="bo-menu" id="comment-menu-${comment.id}">
+                            <button type="button" class="bo-menu-action" data-edit-toggle="comment-edit-${comment.id}"><i class="bi bi-pencil"></i> Modifier le commentaire</button>
+                            <form method="post" action="${escapeHtml(comment.deleteUrl)}" class="js-delete-form" data-delete-kind="comment" data-delete-label="ce commentaire">
+                                <input type="hidden" name="_token" value="${escapeHtml(comment.deleteToken)}">
+                                <button type="submit" class="bo-menu-action is-danger"><i class="bi bi-trash"></i> Supprimer le commentaire</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bo-comment-bubble">
+                <p class="bo-comment-text">${escapeHtml(comment.content).replace(/\n/g, '<br>')}</p>
+            </div>
+            <form method="post" action="${escapeHtml(comment.editUrl)}" id="comment-edit-${comment.id}" class="bo-inline-edit js-comment-edit-form">
+                <textarea name="comment_content" rows="2">${escapeHtml(comment.content)}</textarea>
+                <button type="submit">Enregistrer</button>
+            </form>
+        </div>
+    `;
+
+    return wrapper;
+}
+
+document.addEventListener('click', function (event) {
+    const toggle = event.target.closest('[data-menu-toggle]');
+    const editToggle = event.target.closest('[data-edit-toggle]');
+    const commentFocus = event.target.closest('[data-comment-focus]');
+
+    if (event.target === deleteModal || event.target.closest('#delete-modal-cancel')) {
+        closeDeleteModal();
+        return;
+    }
+
+    if (commentFocus) {
+        event.preventDefault();
+        focusCommentComposer(commentFocus.getAttribute('data-comment-focus'));
+        return;
+    }
+
+    if (toggle) {
+        const menuId = toggle.getAttribute('data-menu-toggle');
+        const menu = document.getElementById(menuId);
+        const wasOpen = menu && menu.classList.contains('is-open');
+
+        closeOpenMenus();
+
+        if (menu && !wasOpen) {
+            menu.classList.add('is-open');
+        }
+
+        return;
+    }
+
+    if (editToggle) {
+        const formId = editToggle.getAttribute('data-edit-toggle');
+        const form = document.getElementById(formId);
+
+        if (form) {
+            form.classList.toggle('is-open');
+        }
+
+        closeOpenMenus();
+
+        return;
+    }
+
+    if (!event.target.closest('.bo-menu-wrap')) {
+        closeOpenMenus();
+    }
+});
+
+deleteModalConfirm.addEventListener('click', async function () {
+    if (!pendingDeleteForm) {
+        return;
+    }
+
+    const form = pendingDeleteForm;
+    closeDeleteModal();
+    await submitDeleteForm(form);
+});
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && deleteModal.classList.contains('is-open')) {
+        closeDeleteModal();
+    }
+});
+
+document.querySelectorAll('.js-reaction-form').forEach(function (form) {
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const postId = form.getAttribute('data-post-id');
+        const postEl = document.querySelector('[data-post-id="' + postId + '"]');
+        if (!postEl) {
+            return;
+        }
+
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(form)
+        });
+
+        if (!response.ok) {
+            showTransientFlash('Impossible de mettre a jour la reaction.', 'danger');
+            return;
+        }
+
+        const data = await response.json();
+        if (!data.success) {
+            showTransientFlash(data.message || 'Impossible de mettre a jour la reaction.', 'danger');
+            return;
+        }
+
+        postEl.querySelector('[data-reaction-count="like"]').innerHTML = '<i class="bi bi-hand-thumbs-up-fill" style="color:#60a5fa;"></i> ' + data.counts.like;
+        postEl.querySelector('[data-reaction-count="love"]').innerHTML = '<i class="bi bi-heart-fill" style="color:#f87171;"></i> ' + data.counts.love;
+        postEl.querySelector('[data-reaction-count="dislike"]').innerHTML = '<i class="bi bi-hand-thumbs-down-fill" style="color:#fbbf24;"></i> ' + data.counts.dislike;
+        postEl.dataset.reactions = String((data.counts.like || 0) + (data.counts.love || 0) + (data.counts.dislike || 0));
+        closeOpenMenus();
+        applyPostFilters();
+    });
+});
+
+function syncCommentSubmitVisibility(form) {
+    const textarea = form.querySelector('textarea');
+    const submit = form.querySelector('[data-comment-submit]');
+
+    if (!textarea || !submit) {
+        return;
+    }
+
+    const hasText = textarea.value.trim().length > 0;
+    submit.classList.toggle('is-hidden', !hasText);
+    submit.disabled = !hasText;
+}
+
+function focusCommentComposer(postId) {
+    const textarea = document.querySelector('[data-comment-input="' + postId + '"]');
+    if (!textarea) {
+        return;
+    }
+
+    const composer = textarea.closest('.bo-comment-composer');
+    if (composer) {
+        composer.classList.add('is-targeted');
+    }
+
+    textarea.classList.add('is-targeted-field');
+    textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    window.setTimeout(function () {
+        textarea.focus();
+
+        if (typeof textarea.setSelectionRange === 'function') {
+            const end = textarea.value.length;
+            textarea.setSelectionRange(end, end);
+        }
+    }, 140);
+}
+
+function applyPostFilters() {
+    const searchInput = document.getElementById('bo-post-search');
+    const sortSelect = document.getElementById('bo-post-sort');
+    const posts = Array.from(document.querySelectorAll('.bo-post[data-post-id]'));
+    const query = (searchInput?.value || '').trim().toLowerCase();
+    const sort = sortSelect?.value || 'newest';
+
+    posts.forEach(function (post) {
+        const title = post.getAttribute('data-title') || '';
+        const visible = query === '' || title.includes(query);
+        post.classList.toggle('is-hidden', !visible);
+    });
+
+    const visiblePosts = posts.filter(function (post) {
+        return !post.classList.contains('is-hidden');
+    });
+
+    visiblePosts.sort(function (a, b) {
+        if (sort === 'oldest') {
+            return Number(a.dataset.date) - Number(b.dataset.date);
+        }
+        if (sort === 'title-asc') {
+            return (a.dataset.title || '').localeCompare(b.dataset.title || '');
+        }
+        if (sort === 'title-desc') {
+            return (b.dataset.title || '').localeCompare(a.dataset.title || '');
+        }
+        if (sort === 'comments-desc') {
+            return Number(b.dataset.comments) - Number(a.dataset.comments);
+        }
+        if (sort === 'reactions-desc') {
+            return Number(b.dataset.reactions) - Number(a.dataset.reactions);
+        }
+
+        return Number(b.dataset.date) - Number(a.dataset.date);
+    });
+
+    const container = document.querySelector('.bo-feed-main');
+    if (!container) {
+        return;
+    }
+
+    visiblePosts.forEach(function (post) {
+        container.appendChild(post);
+    });
+}
+
+document.querySelectorAll('.js-comment-form').forEach(function (form) {
+    syncCommentSubmitVisibility(form);
+
+    const textarea = form.querySelector('textarea');
+    if (textarea) {
+        textarea.addEventListener('input', function () {
+            syncCommentSubmitVisibility(form);
+        });
+
+        textarea.addEventListener('focus', function () {
+            const composer = textarea.closest('.bo-comment-composer');
+            if (composer) {
+                composer.classList.add('is-targeted');
+            }
+
+            textarea.classList.add('is-targeted-field');
+        });
+
+        textarea.addEventListener('blur', function () {
+            const composer = textarea.closest('.bo-comment-composer');
+            if (composer) {
+                composer.classList.remove('is-targeted');
+            }
+
+            textarea.classList.remove('is-targeted-field');
+        });
+    }
+});
+
+document.addEventListener('submit', async function (event) {
+    const deleteForm = event.target.closest('.js-delete-form');
+    if (deleteForm) {
+        event.preventDefault();
+        openDeleteModal(deleteForm);
+        closeOpenMenus();
+        return;
+    }
+
+    const commentForm = event.target.closest('.js-comment-form');
+    if (commentForm) {
+        event.preventDefault();
+
+        const postId = commentForm.getAttribute('data-post-id');
+        const postEl = document.querySelector('[data-post-id="' + postId + '"]');
+        if (!postEl) {
+            return;
+        }
+
+        const response = await fetch(commentForm.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(commentForm)
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            showTransientFlash(data.message || 'Impossible d\'ajouter le commentaire.', 'danger');
+            return;
+        }
+
+        const list = postEl.querySelector('[data-comments-list]');
+        const empty = postEl.querySelector('[data-empty-comments]');
+        if (empty) {
+            empty.remove();
+        }
+
+        list.appendChild(createCommentNode(data.comment));
+        updateCommentCount(postEl, data.commentCount);
+        postEl.dataset.comments = String(data.commentCount);
+        commentForm.reset();
+        syncCommentSubmitVisibility(commentForm);
+        applyPostFilters();
+        return;
+    }
+
+    const editForm = event.target.closest('.js-comment-edit-form');
+    if (editForm) {
+        event.preventDefault();
+
+        const response = await fetch(editForm.action, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: new FormData(editForm)
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            showTransientFlash(data.message || 'Impossible de modifier le commentaire.', 'danger');
+            return;
+        }
+
+        const commentMain = editForm.closest('.bo-comment-main');
+        if (!commentMain) {
+            return;
+        }
+
+        const textNode = commentMain.querySelector('.bo-comment-text');
+        const dateNode = commentMain.querySelector('[data-comment-date]');
+        const badgeContainer = commentMain.querySelector('.bo-comment-name-row');
+        let editedBadge = badgeContainer ? badgeContainer.querySelector('[data-edited-badge]') : null;
+
+        if (textNode) {
+            textNode.innerHTML = escapeHtml(data.comment.content).replace(/\n/g, '<br>');
+        }
+
+        if (dateNode) {
+            dateNode.textContent = data.comment.updatedAt;
+        }
+
+        if (badgeContainer && !editedBadge) {
+            editedBadge = document.createElement('span');
+            editedBadge.className = 'bo-badge-soft';
+            editedBadge.setAttribute('data-edited-badge', 'true');
+            editedBadge.textContent = 'Modifie';
+            badgeContainer.appendChild(editedBadge);
+        }
+
+        editForm.classList.remove('is-open');
+        showTransientFlash(data.message || 'Commentaire mis a jour.', 'success');
+    }
+});
+
+const searchInput = document.getElementById('bo-post-search');
+const sortSelect = document.getElementById('bo-post-sort');
+if (searchInput) {
+    searchInput.addEventListener('input', applyPostFilters);
+}
+if (sortSelect) {
+    sortSelect.addEventListener('change', applyPostFilters);
+}
+
+autoHideExistingFlashes();
+applyPostFilters();
+</script>
+{% endblock %}

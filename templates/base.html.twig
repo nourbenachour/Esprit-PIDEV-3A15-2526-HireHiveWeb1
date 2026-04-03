@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HireHive{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>*</text></svg>">
+
+    {% block stylesheets %}
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+        {{ encore_entry_link_tags('app') }}
+        {{ encore_entry_link_tags('styles') }}
+    {% endblock %}
+
+    {% block javascripts %}
+        {{ encore_entry_script_tags('app') }}
+    {% endblock %}
+</head>
+<body class="front-root">
+<div class="front-page">
+    <header class="front-topbar">
+        <div class="brand-block">
+            <div class="brand-logo brand-logo-fallback" aria-hidden="true">H</div>
+            <div class="brand-text">
+                <span class="brand-name">HireHive</span>
+                <span class="brand-sub">Plateforme RH</span>
+            </div>
+        </div>
+
+        {% set current = app.request.attributes.get('_route') %}
+        <nav class="front-nav">
+            <a href="{{ path('app_frontoffice_home') }}" class="nav-link {% if current in ['app_frontoffice', 'app_frontoffice_home'] %}is-active{% endif %}">Accueil</a>
+            <a href="{{ path('app_frontoffice_offers') }}" class="nav-link {% if current == 'app_frontoffice_offers' %}is-active{% endif %}">Offres</a>
+            <a href="{{ path('app_frontoffice_trainings') }}" class="nav-link {% if current == 'app_frontoffice_trainings' %}is-active{% endif %}">Formations</a>
+            <a href="{{ path('app_frontoffice_interviews') }}" class="nav-link {% if current == 'app_frontoffice_interviews' %}is-active{% endif %}">Entretiens</a>
+            <a href="{{ path('app_frontoffice_reclamations') }}" class="nav-link {% if current == 'app_frontoffice_reclamations' %}is-active{% endif %}">Réclamations</a>
+            <a href="{{ path('app_frontoffice_reviews') }}" class="nav-link {% if current == 'app_frontoffice_reviews' %}is-active{% endif %}">Avis</a>
+            <a href="{{ path('app_frontoffice_feed') }}" class="nav-link {% if current in ['app_frontoffice_posts', 'app_frontoffice_feed', 'app_frontoffice_post_new', 'app_frontoffice_post_edit'] %}is-active{% endif %}">Posts</a>
+            <a href="{{ path('app_frontoffice_messages') }}" class="nav-link {% if current == 'app_frontoffice_messages' %}is-active{% endif %}">Messagerie</a>
+            <a href="{{ path('app_frontoffice_profile') }}" class="nav-link {% if current == 'app_frontoffice_profile' %}is-active{% endif %}">Mon profil</a>
+        </nav>
+
+        <div class="front-actions">
+            <span class="user-label">
+                {% if app.user %}
+                    {{ app.user.firstName ?? app.user.firstname ?? app.user.userIdentifier ?? 'Utilisateur' }}
+                {% else %}
+                    Invité
+                {% endif %}
+            </span>
+            <a href="{{ path('app_logout') }}" class="btn-outline">Déconnexion</a>
+        </div>
+    </header>
+
+    <main class="front-content">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="flash flash-{{ label }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<style>
+:root {
+    --accent: #7c3aed;
+    --accent-dark: #5b21b6;
+    --text: #1f2937;
+    --muted: #4b5563;
+    --bg: #f6f4fb;
+    --card: #ffffff;
+    --border: #e6e0f7;
+}
+* { box-sizing: border-box; }
+body.front-root {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+.front-page {
+    max-width: 1180px;
+    margin: 0 auto;
+    background: var(--card);
+    min-height: 100vh;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+}
+.front-topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    justify-content: space-between;
+    padding: 14px 22px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.90) 100%);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid #e5e7eb;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+.brand-block { display: flex; align-items: center; gap: 10px; }
+.brand-logo { width: 46px; height: 46px; object-fit: contain; }
+.brand-logo-fallback {
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    color: #fff;
+    font-weight: 800;
+    font-size: 22px;
+}
+.brand-text { display: flex; flex-direction: column; }
+.brand-name { font-weight: 800; font-size: 18px; color: var(--accent); }
+.brand-sub { font-size: 12px; color: var(--muted); }
+.front-nav { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding: 4px 0; }
+.front-nav::-webkit-scrollbar { height: 6px; }
+.front-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+.nav-link {
+    position: relative;
+    padding: 9px 12px;
+    border-radius: 10px;
+    color: #111827;
+    text-decoration: none;
+    font-weight: 700;
+    letter-spacing: -0.1px;
+    transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.nav-link::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 6px;
+    height: 3px;
+    border-radius: 999px;
+    background: transparent;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.nav-link:hover {
+    background: #f5f3ff;
+    color: var(--accent);
+    transform: translateY(-1px);
+}
+.nav-link.is-active {
+    background: #ede9fe;
+    color: var(--accent);
+    border: 1px solid #e4ddff;
+}
+.nav-link.is-active::after {
+    background: var(--accent);
+    transform: translateY(1px);
+}
+.front-actions { display: flex; align-items: center; gap: 10px; }
+.user-label { font-size: 13px; color: var(--muted); }
+.btn-outline {
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    background: #fff;
+}
+.btn-outline:hover { background: #ede9fe; }
+.front-content { padding: 24px 20px 40px; }
+.flash {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+}
+.flash-success { background: #e7f8ef; color: #14532d; border-color: #bbf7d0; }
+.flash-error { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.flash-warning { background: #fef9c3; color: #92400e; border-color: #fcd34d; }
+.flash-info { background: #e0f2fe; color: #0f4d75; border-color: #bfdbfe; }
+@media (max-width: 900px) {
+    .front-topbar { flex-wrap: wrap; align-items: flex-start; }
+    .front-actions { width: 100%; justify-content: flex-end; }
+}
+@media (max-width: 600px) {
+    .front-nav { width: 100%; }
+    .front-actions { width: 100%; justify-content: space-between; }
+    .brand-block { width: 100%; justify-content: space-between; }
+}
+</style>
+</body>
+</html>

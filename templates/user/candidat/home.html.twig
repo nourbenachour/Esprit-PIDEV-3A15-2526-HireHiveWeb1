@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil Candidat - HireHive{% endblock %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <link rel="stylesheet" href="{{ asset('build/javafx.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="home-root">
+  <header class="home-head">
+    <h1 class="home-main-title">Bonjour, {{ userName|default('Candidat') }}</h1>
+    <p class="home-subtitle">Prêt à continuer votre apprentissage ?</p>
+  </header>
+
+  <section class="home-kpi">
+    <div class="home-kpi-card kpi-purple">
+      <p class="home-kpi-value">{{ courseCount|default(0) }}</p>
+      <p class="home-kpi-label">Mes Cours Actifs</p>
+    </div>
+    <div class="home-kpi-card kpi-pink">
+      <p class="home-kpi-value">{{ badgeCount|default(0) }}</p>
+      <p class="home-kpi-label">Badges Débloqués</p>
+    </div>
+    <div class="home-kpi-card kpi-blue">
+      <p class="home-kpi-value">{{ certCount|default(0) }}</p>
+      <p class="home-kpi-label">Certificats Obtenus</p>
+    </div>
+  </section>
+
+  <section class="home-section-card glow-card">
+    <h2 class="home-section-title">Progression des Cours</h2>
+    <canvas id="progressChart"></canvas>
+  </section>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ parent() }}
+  <script src="{{ asset('chart/chart.min.js') }}"></script>
+  <script>
+    const pc = document.getElementById('progressChart');
+    if (pc) {
+      new Chart(pc, {
+        type: 'bar',
+        data: {
+          labels: {{ progressLabels|default([])|json_encode|raw }},
+          datasets: [{
+            data: {{ progressData|default([])|json_encode|raw }},
+            backgroundColor: '#a855f7'
+          }]
+        },
+        options: {
+          scales: {
+            x: {
+              ticks: {
+                color: '#94a3b8'
+              }
+            },
+            y: {
+              ticks: {
+                color: '#94a3b8'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
+        }
+      });
+    }
+  </script>
+{% endblock %}
