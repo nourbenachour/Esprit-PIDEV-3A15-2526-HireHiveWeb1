@@ -7,16 +7,22 @@
             <a class="btn sidebar-btn {% if app.request.attributes.get('_route') starts with 'contract_' or app.request.attributes.get('_route') == 'entretiens_contracts_redirect' %}active{% endif %}" href="{{ path('entretiens_contracts_redirect') }}">
                 Contrats
             </a>
-            <a class="btn sidebar-btn {% if app.request.attributes.get('_route') starts with 'questionnaire_' or app.request.attributes.get('_route') == 'entretiens_questionnaire_redirect' %}active{% endif %}" href="{{ path('entretiens_questionnaire_redirect') }}">
-                Questionnaires
-            </a>
-            <div class="sidebar-separator"></div>
-            <a class="btn sidebar-btn {% if app.request.attributes.get('_route') == 'entretiens_calendrier' %}active{% endif %}" href="{{ path('entretiens_calendrier') }}">
-                Calendrier
-            </a>
-            <a class="btn sidebar-btn {% if app.request.attributes.get('_route') == 'entretiens_dashboard' %}active{% endif %}" href="{{ path('entretiens_dashboard') }}">
-                Dashboard
-            </a>
+
+            {% if not is_granted('ROLE_ADMIN') %}
+                <a class="btn sidebar-btn {% if app.request.attributes.get('_route') starts with 'questionnaire_' or app.request.attributes.get('_route') == 'entretiens_questionnaire_redirect' %}active{% endif %}" href="{{ path('entretiens_questionnaire_redirect') }}">
+                    Questionnaires
+                </a>
+            {% endif %}
+
+            {% if is_granted('ROLE_RECRUITER') %}
+                <div class="sidebar-separator"></div>
+                <a class="btn sidebar-btn {% if app.request.attributes.get('_route') == 'entretiens_calendrier' %}active{% endif %}" href="{{ path('entretiens_calendrier') }}">
+                    Calendrier
+                </a>
+                <a class="btn sidebar-btn {% if app.request.attributes.get('_route') == 'entretiens_dashboard' %}active{% endif %}" href="{{ path('entretiens_dashboard') }}">
+                    Dashboard
+                </a>
+            {% endif %}
         </nav>
 
     </div>

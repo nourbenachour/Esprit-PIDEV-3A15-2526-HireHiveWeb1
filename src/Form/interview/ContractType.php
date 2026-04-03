@@ -31,6 +31,10 @@ class ContractType extends AbstractType
                         'minMessage' => 'Le nom doit contenir au moins 2 caractères',
                         'maxMessage' => 'Le nom ne peut dépasser 255 caractères',
                     ]),
+                    new Assert\Regex([
+                        'pattern' => '/^(?=.*\p{L})[\p{L}\s\'\-]+$/u',
+                        'message' => 'Le nom du candidat doit contenir uniquement des lettres.',
+                    ]),
                 ],
             ])
             ->add('companyName', TextType::class, [
@@ -48,11 +52,16 @@ class ContractType extends AbstractType
                         'minMessage' => 'Le nom doit contenir au moins 2 caractères',
                         'maxMessage' => 'Le nom ne peut dépasser 255 caractères',
                     ]),
+                    new Assert\Regex([
+                        'pattern' => '/^(?=.*\p{L})[\p{L}\s\'\-]+$/u',
+                        'message' => 'Le nom de l\'entreprise doit contenir uniquement des lettres.',
+                    ]),
                 ],
             ])
             ->add('salary', NumberType::class, [
                 'label' => 'Salaire annuel (€)',
                 'attr' => ['class' => 'form-control'],
+                'invalid_message' => 'Veuillez saisir un nombre valide.',
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'Le salaire est obligatoire']),
                     new Assert\GreaterThan([
@@ -93,23 +102,6 @@ class ContractType extends AbstractType
                 'attr' => ['class' => 'form-control'],
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'La date de fin est obligatoire']),
-                ],
-            ])
-            ->add('status', ChoiceType::class, [
-                'label' => 'Statut',
-                'choices' => [
-                    'En attente' => 'PENDING',
-                    'Envoyé' => 'SENT',
-                    'Signé' => 'SIGNED',
-                    'Refusé' => 'REJECTED',
-                ],
-                'attr' => ['class' => 'form-control'],
-                'constraints' => [
-                    new Assert\NotBlank(['message' => 'Le statut est obligatoire']),
-                    new Assert\Choice([
-                        'choices' => ['PENDING', 'SENT', 'SIGNED', 'REJECTED'],
-                        'message' => 'Statut invalide',
-                    ]),
                 ],
             ])
         ;

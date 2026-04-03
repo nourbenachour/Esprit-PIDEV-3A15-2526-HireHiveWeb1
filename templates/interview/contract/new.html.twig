@@ -13,10 +13,6 @@
             <h1 class="module-title mb-3">Créer un contrat</h1>
             <p class="text-muted mb-4">Complétez les champs obligatoires (*) pour enregistrer le contrat.</p>
 
-            {% if recruiterCompanyName %}
-                <div class="alert alert-info soft-alert">Entreprise auto-remplie depuis votre profil recruteur: <strong>{{ recruiterCompanyName }}</strong></div>
-            {% endif %}
-
             {{ form_start(form) }}
 
             <div class="row">
@@ -59,12 +55,6 @@
                 </div>
             </div>
 
-            <div class="mb-4">
-                {{ form_label(form.status, 'Statut *', {'label_attr': {'class': 'field-label'}}) }}
-                {{ form_widget(form.status, {'attr': {'class': 'form-control soft-input'}}) }}
-                {{ form_errors(form.status) }}
-            </div>
-
             <div class="d-flex justify-content-end gap-2">
                 <button type="submit" class="btn soft-btn soft-btn-primary">Créer</button>
                 <a href="{{ path('contract_index') }}" class="btn soft-btn soft-btn-light">Annuler</a>
@@ -81,7 +71,6 @@
 .module-title { color: #0f1b3e; font-weight: 800; }
 .field-label { color: #6d28d9; font-weight: 800; font-size: 1.05rem; }
 .soft-input { border-radius: 14px; border: 1px solid #ccd3e3; min-height: 46px; }
-.soft-alert { background: #eef3ff; border: 1px solid #cfe0ff; color: #23335f; border-radius: 12px; }
 .soft-btn { border-radius: 999px; padding: 10px 26px; font-weight: 700; border: 0; }
 .soft-btn-primary { background: linear-gradient(135deg, #6c2bd9, #8f4bff); color: #fff; box-shadow: 0 6px 16px rgba(108, 43, 217, 0.35); }
 .soft-btn-light { background: #efe9ff; color: #6d28d9; }

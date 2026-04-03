@@ -12,7 +12,9 @@
             <div class="module-card p-3 p-md-4">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                     <h1 class="module-title mb-0">Questionnaires d'entretien</h1>
-                    <a href="{{ path('questionnaire_new') }}" class="btn soft-btn soft-btn-primary">+ Ajouter un questionnaire</a>
+                    {% if is_granted('ROLE_RECRUITER') %}
+                        <a href="{{ path('questionnaire_new') }}" class="btn soft-btn soft-btn-primary">+ Ajouter un questionnaire</a>
+                    {% endif %}
                 </div>
 
                 {% if questionnairesByJobTitle is empty %}
@@ -52,15 +54,17 @@
                                         >
                                             <i class="bi bi-eye"></i>
                                         </button>
-                                        <a href="{{ path('questionnaire_edit', {id: firstQuestion.id}) }}" class="action-pill" title="Modifier">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <form method="post" action="{{ path('questionnaire_delete', {id: firstQuestion.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce questionnaire et toutes ses questions ?');">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ firstQuestion.id) }}">
-                                            <button type="submit" class="action-pill danger" title="Supprimer">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        {% if is_granted('ROLE_RECRUITER') %}
+                                            <a href="{{ path('questionnaire_edit', {id: firstQuestion.id}) }}" class="action-pill" title="Modifier">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            <form method="post" action="{{ path('questionnaire_delete', {id: firstQuestion.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce questionnaire et toutes ses questions ?');">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ firstQuestion.id) }}">
+                                                <button type="submit" class="action-pill danger" title="Supprimer">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        {% endif %}
                                     </div>
                                 {% endif %}
                             </article>

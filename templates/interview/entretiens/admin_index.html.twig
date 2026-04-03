@@ -1,0 +1,138 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Admin - Entretiens et Contrats{% endblock %}
+
+{% block backoffice_content %}
+<div class="container-fluid admin-wrap">
+    <section class="admin-block mb-4">
+        <h2 class="admin-title">Entretiens (Administration)</h2>
+
+        <form method="get" class="admin-filters mb-3">
+            <input type="text" name="i_search" class="form-control admin-input" placeholder="Rechercher par candidat ou entreprise" value="{{ app.request.query.get('i_search') ?? '' }}">
+            <span class="f-label">Du :</span>
+            <input type="date" name="i_from" class="form-control admin-input date-input" value="{{ app.request.query.get('i_from') ?? '' }}">
+            <span class="f-label">Au :</span>
+            <input type="date" name="i_to" class="form-control admin-input date-input" value="{{ app.request.query.get('i_to') ?? '' }}">
+            <span class="f-label">Statut :</span>
+            <select name="i_status" class="form-control admin-input status-input">
+                <option value="">Tous les statuts</option>
+                {% for status in interviewStatuses %}
+                    <option value="{{ status }}" {% if app.request.query.get('i_status') == status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn admin-btn">Filtrer</button>
+            <a href="{{ path('interview_backoffice_admin') }}" class="btn admin-btn admin-btn-light">Réinitialiser</a>
+        </form>
+
+        <div class="table-shell">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Candidat</th>
+                        <th>Entreprise</th>
+                        <th>Date d'entretien</th>
+                        <th>Heure</th>
+                        <th>Statut</th>
+                        <th>Résultat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interview in interviews %}
+                        <tr>
+                            <td>{{ interview.candidateName }}</td>
+                            <td>{{ interview.companyName }}</td>
+                            <td>{{ interview.interviewDate ? interview.interviewDate|date('d/m/Y') : '-' }}</td>
+                            <td>{{ (interview.heureDebut ~ '')|slice(0, 5) }} - {{ (interview.heureFin ~ '')|slice(0, 5) }}</td>
+                            <td>{{ interview.status }}</td>
+                            <td>{{ interview.result }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-cell">Aucune donnée disponible pour le moment.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="admin-block">
+        <h2 class="admin-title">Contrats (Administration)</h2>
+
+        <form method="get" class="admin-filters mb-3">
+            <input type="hidden" name="i_search" value="{{ app.request.query.get('i_search') ?? '' }}">
+            <input type="hidden" name="i_from" value="{{ app.request.query.get('i_from') ?? '' }}">
+            <input type="hidden" name="i_to" value="{{ app.request.query.get('i_to') ?? '' }}">
+            <input type="hidden" name="i_status" value="{{ app.request.query.get('i_status') ?? '' }}">
+
+            <input type="text" name="c_search" class="form-control admin-input" placeholder="Recherche.." value="{{ app.request.query.get('c_search') ?? '' }}">
+            <span class="f-label">Du :</span>
+            <input type="date" name="c_from" class="form-control admin-input date-input" value="{{ app.request.query.get('c_from') ?? '' }}">
+            <span class="f-label">Au :</span>
+            <input type="date" name="c_to" class="form-control admin-input date-input" value="{{ app.request.query.get('c_to') ?? '' }}">
+            <span class="f-label">Statut :</span>
+            <select name="c_status" class="form-control admin-input status-input">
+                <option value="">Tous les statuts</option>
+                {% for status in contractStatuses %}
+                    <option value="{{ status }}" {% if app.request.query.get('c_status') == status %}selected{% endif %}>{{ status }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn admin-btn">Filtrer</button>
+            <a href="{{ path('interview_backoffice_admin') }}" class="btn admin-btn admin-btn-light">Réinitialiser</a>
+        </form>
+
+        <div class="table-shell">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Candidat</th>
+                        <th>Entreprise</th>
+                        <th>Salaire</th>
+                        <th>Type</th>
+                        <th>Date début</th>
+                        <th>Date fin</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contract in contracts %}
+                        <tr>
+                            <td>{{ contract.candidateName }}</td>
+                            <td>{{ contract.companyName }}</td>
+                            <td>{{ contract.salary|number_format(1, '.', '') }}</td>
+                            <td>{{ contract.contractType }}</td>
+                            <td>{{ contract.startDate ? contract.startDate|date('Y-m-d') : '-' }}</td>
+                            <td>{{ contract.endDate ? contract.endDate|date('Y-m-d') : '-' }}</td>
+                            <td>{{ contract.status }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="empty-cell">Aucune donnée disponible pour le moment.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<style>
+.admin-wrap { background: transparent; border-radius: 14px; padding: 0; }
+.admin-block { background: #090f26; border: 1px solid #1a264f; border-radius: 16px; padding: 16px; }
+.admin-title { color: #ff8a1f; font-weight: 800; margin-bottom: 12px; font-size: 1.28rem; }
+.admin-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.admin-input { background: #0f1329; color: #dde4ff; border: 1px solid #252f5d; border-radius: 10px; min-height: 36px; font-size: 0.84rem; }
+.admin-input::placeholder { color: #8f9ac4; font-size: 0.84rem; }
+.date-input { width: 150px; }
+.status-input { width: 170px; }
+.f-label { color: #d7def8; font-weight: 700; font-size: 0.82rem; }
+.admin-btn { border-radius: 999px; background: linear-gradient(135deg, #7f3dff, #9b5cff); color: #fff; border: 0; padding: 6px 12px; font-weight: 700; font-size: 0.82rem; }
+.admin-btn-light { background: #d7cbff; color: #40189d; }
+.table-shell { border: 1px solid #222c58; border-radius: 12px; overflow: hidden; }
+.admin-table { color: #ffffff; margin: 0; }
+.admin-table thead th { background: #121936; color: #ffffff; border-bottom: 1px solid #2c376a; font-weight: 800; font-size: 0.8rem; padding: 9px 7px; }
+.admin-table td { border-top: 1px solid #1c2551; background: #0d1330; color: #ffffff; font-size: 0.78rem; padding: 8px 7px; }
+.admin-table tbody tr:nth-child(even) td { background: #0f1738; }
+.empty-cell { text-align: center; color: #ffffff; padding: 14px 8px; font-size: 0.82rem; }
+</style>
+{% endblock %}

@@ -3,6 +3,8 @@
 namespace App\Controller\interview;
 
 use App\Entity\Interview;
+use App\Entity\Recruiter;
+use App\Entity\Users;
 use App\Form\interview\InterviewType;
 use App\Repository\interview\InterviewRepository;
 use App\Service\interview\InterviewService;
@@ -49,10 +51,12 @@ class InterviewController extends AbstractController
         }
 
         $interviews = $this->repository->findByFilters($searchText, $status, $dateFrom, $dateTo);
+        $interviews = $this->filterInterviewsByCurrentRole($interviews);
 
         return $this->render('interview/interview/index.html.twig', [
             'interviews' => $interviews,
             'statuses' => InterviewService::VALID_STATUSES,
+            'canManageInterviews' => $this->isGranted('ROLE_RECRUITER'),
         ]);
     }
 
@@ -66,6 +70,10 @@ class InterviewController extends AbstractController
 
         if (!$interview) {
             throw $this->createNotFoundException('Entretien non trouvé');
+        }
+
+        if (!$this->canAccessInterview($interview)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas consulter cet entretien.');
         }
 
         return $this->render('interview/interview/show.html.twig', [
@@ -83,9 +91,6 @@ class InterviewController extends AbstractController
             'interviewDate' => $this->safeDate(fn () => $interview->getInterviewDate()),
             'heureDebut' => $this->formatTimeDisplay($this->safeString(fn () => $interview->getHeureDebut())),
             'heureFin' => $this->formatTimeDisplay($this->safeString(fn () => $interview->getHeureFin())),
-            'status' => $this->safeString(fn () => $interview->getStatus()) ?? 'PENDING',
-            'result' => $this->safeString(fn () => $interview->getResult()) ?? 'SENT',
-            'attendanceStatus' => $this->safeString(fn () => $interview->getAttendanceStatus()) ?? 'PLANNED',
             'requestDate' => $this->safeDate(fn () => $interview->getRequestDate()),
             'decisionDate' => $this->safeDate(fn () => $interview->getDecisionDate()),
         ];
@@ -140,27 +145,40 @@ class InterviewController extends AbstractController
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $interview = new Interview();
-        $form = $this->createForm(InterviewType::class, $interview);
+        $recruiterCompanyName = $this->resolveRecruiterCompanyName();
+        if ($recruiterCompanyName !== null) {
+            $interview->setCompanyName($recruiterCompanyName);
+        }
+
+        $form = $this->createForm(InterviewType::class, $interview, [
+            'lock_company_name' => true,
+            'company_name_hint' => $recruiterCompanyName,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
                 // Valider la cohérence horaires
-                $heureDebut = $form->get('heureDebut')->getData();
-                $heureFin = $form->get('heureFin')->getData();
-                
-                // Convertir en string HH:MM
-                $heure_debut_str = $heureDebut->format('H:i');
-                $heure_fin_str = $heureFin->format('H:i');
+                $heure_debut_str = (string) $form->get('heureDebut')->getData();
+                $heure_fin_str = (string) $form->get('heureFin')->getData();
                 
                 $this->service->validateTimeCoherence($heure_debut_str, $heure_fin_str);
-                $this->service->validateStatus($interview->getStatus());
-                $this->service->validateResult($interview->getResult());
+
+                // These values are managed by business workflow, not by scheduling form.
+                $interview->setStatus('PENDING');
+                $interview->setResult('SENT');
+                $interview->setAttendanceStatus('PLANNED');
 
                 // Keep meet link empty for now (API integration disabled).
                 $interview->setMeet_link('');
                 $interview->setRequestDate(new \DateTime());
+
+                // This entity uses assigned identifiers, so set an ID before persist.
+                $interview->setIdInterview($this->getNextInterviewId());
+
                 $this->em->persist($interview);
                 $this->em->flush();
 
@@ -176,31 +194,64 @@ class InterviewController extends AbstractController
         ]);
     }
 
+    private function resolveRecruiterCompanyName(): ?string
+    {
+        $user = $this->getUser();
+        if (!$user instanceof Users) {
+            return null;
+        }
+
+        $recruiter = $this->em->getRepository(Recruiter::class)->findOneBy(['user_id' => $user]);
+        if (!$recruiter instanceof Recruiter) {
+            return null;
+        }
+
+        $companyName = trim((string) $recruiter->getCompany_name());
+        return $companyName === '' ? null : $companyName;
+    }
+
+    private function getNextInterviewId(): int
+    {
+        $maxId = (int) $this->em->createQueryBuilder()
+            ->select('COALESCE(MAX(i.idInterview), 0)')
+            ->from(Interview::class, 'i')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $maxId + 1;
+    }
+
     /**
      * Formulaire d'édition d'un entretien.
      */
     #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
     public function edit(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $interview = $this->em->getRepository(Interview::class)->find($id);
 
         if (!$interview) {
             throw $this->createNotFoundException('Entretien non trouvé');
         }
 
+        if (!$this->isOwnedByCurrentRecruiter($interview)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cet entretien.');
+        }
+
+        // Normalize legacy HH:mm:ss values to HH:mm so Symfony time transformer
+        // doesn't fail with "Trailing data" on edit form binding.
+        $this->normalizeTimesForForm($interview);
+
         $form = $this->createForm(InterviewType::class, $interview);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
-                $heureDebut = $form->get('heureDebut')->getData();
-                $heureFin = $form->get('heureFin')->getData();
-                
-                $heure_debut_str = $heureDebut->format('H:i');
-                $heure_fin_str = $heureFin->format('H:i');
+                $heure_debut_str = (string) $form->get('heureDebut')->getData();
+                $heure_fin_str = (string) $form->get('heureFin')->getData();
                 
                 $this->service->validateTimeCoherence($heure_debut_str, $heure_fin_str);
-                $this->service->validateStatus($interview->getStatus());
 
                 $this->em->flush();
                 $this->addFlash('success', 'Entretien modifié avec succès');
@@ -222,10 +273,16 @@ class InterviewController extends AbstractController
     #[Route('/{id}/delete', name: 'delete', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function delete(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $interview = $this->em->getRepository(Interview::class)->find($id);
 
         if (!$interview) {
             throw $this->createNotFoundException('Entretien non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentRecruiter($interview)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer cet entretien.');
         }
 
         if ($this->isCsrfTokenValid('delete' . $interview->getIdInterview(), $request->request->get('_token'))) {
@@ -245,10 +302,16 @@ class InterviewController extends AbstractController
     #[Route('/{id}/accept', name: 'accept', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function accept(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_CANDIDATE');
+
         $interview = $this->em->getRepository(Interview::class)->find($id);
 
         if (!$interview) {
             throw $this->createNotFoundException('Entretien non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentCandidate($interview)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas répondre à cet entretien.');
         }
 
         if ($this->isCsrfTokenValid('accept' . $interview->getIdInterview(), $request->request->get('_token'))) {
@@ -265,10 +328,16 @@ class InterviewController extends AbstractController
     #[Route('/{id}/reject', name: 'reject', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function reject(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_CANDIDATE');
+
         $interview = $this->em->getRepository(Interview::class)->find($id);
 
         if (!$interview) {
             throw $this->createNotFoundException('Entretien non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentCandidate($interview)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas répondre à cet entretien.');
         }
 
         if ($this->isCsrfTokenValid('reject' . $interview->getIdInterview(), $request->request->get('_token'))) {
@@ -285,10 +354,16 @@ class InterviewController extends AbstractController
     #[Route('/{id}/complete', name: 'complete', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function complete(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $interview = $this->em->getRepository(Interview::class)->find($id);
 
         if (!$interview) {
             throw $this->createNotFoundException('Entretien non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentRecruiter($interview)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cet entretien.');
         }
 
         if ($this->isCsrfTokenValid('complete' . $interview->getIdInterview(), $request->request->get('_token'))) {
@@ -300,35 +375,21 @@ class InterviewController extends AbstractController
     }
 
     /**
-     * Action: Marquer comme no-show.
-     */
-    #[Route('/{id}/no-show', name: 'no_show', requirements: ['id' => '\\d+'], methods: ['POST'])]
-    public function noShow(int $id, Request $request): Response
-    {
-        $interview = $this->em->getRepository(Interview::class)->find($id);
-
-        if (!$interview) {
-            throw $this->createNotFoundException('Entretien non trouvé');
-        }
-
-        if ($this->isCsrfTokenValid('noshow' . $interview->getIdInterview(), $request->request->get('_token'))) {
-            $this->service->markAsNoShow($interview);
-            $this->addFlash('info', 'Entretien marqué comme no-show');
-        }
-
-        return $this->redirectToRoute('interview_show', ['id' => $interview->getIdInterview()]);
-    }
-
-    /**
      * Action: Annuler l'entretien.
      */
     #[Route('/{id}/cancel', name: 'cancel', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function cancel(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $interview = $this->em->getRepository(Interview::class)->find($id);
 
         if (!$interview) {
             throw $this->createNotFoundException('Entretien non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentRecruiter($interview)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cet entretien.');
         }
 
         if ($this->isCsrfTokenValid('cancel' . $interview->getIdInterview(), $request->request->get('_token'))) {
@@ -337,5 +398,101 @@ class InterviewController extends AbstractController
         }
 
         return $this->redirectToRoute('interview_show', ['id' => $interview->getIdInterview()]);
+    }
+
+    private function filterInterviewsByCurrentRole(array $interviews): array
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return $interviews;
+        }
+
+        if ($this->isGranted('ROLE_RECRUITER')) {
+            $company = $this->resolveRecruiterCompanyName();
+            if ($company === null) {
+                return [];
+            }
+
+            return array_values(array_filter($interviews, fn (Interview $i): bool => $this->sameText((string) $i->getCompanyName(), $company)));
+        }
+
+        if ($this->isGranted('ROLE_CANDIDATE')) {
+            $candidateName = $this->resolveCandidateFullName();
+            if ($candidateName === null) {
+                return [];
+            }
+
+            return array_values(array_filter($interviews, fn (Interview $i): bool => $this->sameText((string) $i->getCandidateName(), $candidateName)));
+        }
+
+        return [];
+    }
+
+    private function canAccessInterview(Interview $interview): bool
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return true;
+        }
+
+        if ($this->isGranted('ROLE_RECRUITER')) {
+            return $this->isOwnedByCurrentRecruiter($interview);
+        }
+
+        if ($this->isGranted('ROLE_CANDIDATE')) {
+            return $this->isOwnedByCurrentCandidate($interview);
+        }
+
+        return false;
+    }
+
+    private function isOwnedByCurrentRecruiter(Interview $interview): bool
+    {
+        $company = $this->resolveRecruiterCompanyName();
+        if ($company === null) {
+            return false;
+        }
+
+        return $this->sameText((string) $interview->getCompanyName(), $company);
+    }
+
+    private function isOwnedByCurrentCandidate(Interview $interview): bool
+    {
+        $candidateName = $this->resolveCandidateFullName();
+        if ($candidateName === null) {
+            return false;
+        }
+
+        return $this->sameText((string) $interview->getCandidateName(), $candidateName);
+    }
+
+    private function resolveCandidateFullName(): ?string
+    {
+        $user = $this->getUser();
+        if (!$user instanceof Users) {
+            return null;
+        }
+
+        $fullName = trim(sprintf('%s %s', (string) $user->getFirst_name(), (string) $user->getLast_name()));
+        return $fullName === '' ? null : $fullName;
+    }
+
+    private function sameText(string $a, string $b): bool
+    {
+        return mb_strtolower(trim($a)) === mb_strtolower(trim($b));
+    }
+
+    private function normalizeTimesForForm(Interview $interview): void
+    {
+        $interview->setHeureDebut($this->normalizeToHourMinute((string) $interview->getHeureDebut()));
+        $interview->setHeureFin($this->normalizeToHourMinute((string) $interview->getHeureFin()));
+    }
+
+    private function normalizeToHourMinute(string $raw): string
+    {
+        $value = trim($raw);
+        if (preg_match('/^(\d{2}:\d{2})/', $value, $matches)) {
+            return $matches[1];
+        }
+
+        return $value;
     }
 }

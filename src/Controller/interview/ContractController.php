@@ -49,10 +49,12 @@ class ContractController extends AbstractController
         }
 
         $contracts = $this->repository->findByFilters($searchText, $status, $dateFrom, $dateTo);
+        $contracts = $this->filterContractsByCurrentRole($contracts);
 
         return $this->render('interview/contract/index.html.twig', [
             'contracts' => $contracts,
             'statuses' => ContractService::VALID_STATUSES,
+            'canManageContracts' => $this->isGranted('ROLE_RECRUITER'),
         ]);
     }
 
@@ -66,6 +68,10 @@ class ContractController extends AbstractController
 
         if (!$contract) {
             throw $this->createNotFoundException('Contrat non trouvé');
+        }
+
+        if (!$this->canAccessContract($contract)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas consulter ce contrat.');
         }
 
         return $this->render('interview/contract/show.html.twig', [
@@ -133,6 +139,8 @@ class ContractController extends AbstractController
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $contract = new Contrat();
         $recruiterCompanyName = $this->resolveRecruiterCompanyName();
         if ($recruiterCompanyName !== null) {
@@ -147,9 +155,17 @@ class ContractController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
+                // Status is workflow-managed and no longer editable in the form.
+                $contract->setStatus('PENDING');
+                $contract->setSignature('');
+                $contract->setSignedAt(new \DateTime());
+
                 $this->service->validateDateCoherence($contract->getStartDate(), $contract->getEndDate());
                 $this->service->validateStatus($contract->getStatus());
                 $this->service->validateContractType($contract->getContractType());
+
+                // This entity uses assigned identifiers, so set an ID before persist.
+                $contract->setIdContrat($this->getNextContractId());
 
                 $this->em->persist($contract);
                 $this->em->flush();
@@ -183,16 +199,33 @@ class ContractController extends AbstractController
         return $companyName === '' ? null : $companyName;
     }
 
+    private function getNextContractId(): int
+    {
+        $maxId = (int) $this->em->createQueryBuilder()
+            ->select('COALESCE(MAX(c.idContrat), 0)')
+            ->from(Contrat::class, 'c')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $maxId + 1;
+    }
+
     /**
      * Formulaire d'édition d'un contrat.
      */
     #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
     public function edit(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $contract = $this->em->getRepository(Contrat::class)->find($id);
 
         if (!$contract) {
             throw $this->createNotFoundException('Contrat non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentRecruiter($contract)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier ce contrat.');
         }
 
         $form = $this->createForm(ContractType::class, $contract);
@@ -223,10 +256,16 @@ class ContractController extends AbstractController
     #[Route('/{id}/delete', name: 'delete', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function delete(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $contract = $this->em->getRepository(Contrat::class)->find($id);
 
         if (!$contract) {
             throw $this->createNotFoundException('Contrat non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentRecruiter($contract)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer ce contrat.');
         }
 
         if ($this->isCsrfTokenValid('delete' . $contract->getIdContrat(), $request->request->get('_token'))) {
@@ -246,10 +285,16 @@ class ContractController extends AbstractController
     #[Route('/{id}/send', name: 'send', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function send(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $contract = $this->em->getRepository(Contrat::class)->find($id);
 
         if (!$contract) {
             throw $this->createNotFoundException('Contrat non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentRecruiter($contract)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas envoyer ce contrat.');
         }
 
         if ($this->isCsrfTokenValid('send' . $contract->getIdContrat(), $request->request->get('_token'))) {
@@ -271,10 +316,16 @@ class ContractController extends AbstractController
     #[Route('/{id}/sign', name: 'sign', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function sign(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_CANDIDATE');
+
         $contract = $this->em->getRepository(Contrat::class)->find($id);
 
         if (!$contract) {
             throw $this->createNotFoundException('Contrat non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentCandidate($contract)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas signer ce contrat.');
         }
 
         if ($this->isCsrfTokenValid('sign' . $contract->getIdContrat(), $request->request->get('_token'))) {
@@ -296,10 +347,16 @@ class ContractController extends AbstractController
     #[Route('/{id}/reject', name: 'reject', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function reject(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_CANDIDATE');
+
         $contract = $this->em->getRepository(Contrat::class)->find($id);
 
         if (!$contract) {
             throw $this->createNotFoundException('Contrat non trouvé');
+        }
+
+        if (!$this->isOwnedByCurrentCandidate($contract)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas refuser ce contrat.');
         }
 
         if ($this->isCsrfTokenValid('reject' . $contract->getIdContrat(), $request->request->get('_token'))) {
@@ -308,5 +365,85 @@ class ContractController extends AbstractController
         }
 
         return $this->redirectToRoute('contract_show', ['id' => $contract->getIdContrat()]);
+    }
+
+    private function filterContractsByCurrentRole(array $contracts): array
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return $contracts;
+        }
+
+        if ($this->isGranted('ROLE_RECRUITER')) {
+            $company = $this->resolveRecruiterCompanyName();
+            if ($company === null) {
+                return [];
+            }
+
+            return array_values(array_filter($contracts, fn (Contrat $c): bool => $this->sameText((string) $c->getCompanyName(), $company)));
+        }
+
+        if ($this->isGranted('ROLE_CANDIDATE')) {
+            $candidateName = $this->resolveCandidateFullName();
+            if ($candidateName === null) {
+                return [];
+            }
+
+            return array_values(array_filter($contracts, fn (Contrat $c): bool => $this->sameText((string) $c->getCandidateName(), $candidateName)));
+        }
+
+        return [];
+    }
+
+    private function canAccessContract(Contrat $contract): bool
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return true;
+        }
+
+        if ($this->isGranted('ROLE_RECRUITER')) {
+            return $this->isOwnedByCurrentRecruiter($contract);
+        }
+
+        if ($this->isGranted('ROLE_CANDIDATE')) {
+            return $this->isOwnedByCurrentCandidate($contract);
+        }
+
+        return false;
+    }
+
+    private function isOwnedByCurrentRecruiter(Contrat $contract): bool
+    {
+        $company = $this->resolveRecruiterCompanyName();
+        if ($company === null) {
+            return false;
+        }
+
+        return $this->sameText((string) $contract->getCompanyName(), $company);
+    }
+
+    private function isOwnedByCurrentCandidate(Contrat $contract): bool
+    {
+        $candidateName = $this->resolveCandidateFullName();
+        if ($candidateName === null) {
+            return false;
+        }
+
+        return $this->sameText((string) $contract->getCandidateName(), $candidateName);
+    }
+
+    private function resolveCandidateFullName(): ?string
+    {
+        $user = $this->getUser();
+        if (!$user instanceof Users) {
+            return null;
+        }
+
+        $fullName = trim(sprintf('%s %s', (string) $user->getFirst_name(), (string) $user->getLast_name()));
+        return $fullName === '' ? null : $fullName;
+    }
+
+    private function sameText(string $a, string $b): bool
+    {
+        return mb_strtolower(trim($a)) === mb_strtolower(trim($b));
     }
 }

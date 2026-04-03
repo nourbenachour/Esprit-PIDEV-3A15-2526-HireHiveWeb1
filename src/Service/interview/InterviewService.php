@@ -163,15 +163,6 @@ class InterviewService
     }
 
     /**
-     * Marque l'entretien comme no-show.
-     */
-    public function markAsNoShow(Interview $interview): void
-    {
-        $interview->setAttendanceStatus('NO_SHOW');
-        $this->em->flush();
-    }
-
-    /**
      * Annule un entretien.
      */
     public function cancelInterview(Interview $interview): void

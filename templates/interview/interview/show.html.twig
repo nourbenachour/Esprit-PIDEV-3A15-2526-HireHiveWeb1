@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Détail Entretien #{{ interviewView.id }}{% endblock %}
+{% block title %}Détail Entretien{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -11,7 +11,7 @@
         <div class="col-lg-9">
             <div class="show-shell">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                    <h1 class="module-title mb-0">Entretien #{{ interviewView.id }}</h1>
+                    <h1 class="module-title mb-0">Détails de l'entretien</h1>
                     <a href="{{ path('app_frontoffice_interviews') }}" class="btn soft-btn soft-btn-light">Retour</a>
                 </div>
 
@@ -35,18 +35,6 @@
                                 <td>{{ interviewView.heureDebut|slice(0, 5) }} - {{ interviewView.heureFin|slice(0, 5) }}</td>
                             </tr>
                             <tr>
-                                <th>Statut</th>
-                                <td><span class="badge-soft badge-blue">{{ interviewView.status }}</span></td>
-                            </tr>
-                            <tr>
-                                <th>Résultat</th>
-                                <td><span class="badge-soft badge-slate">{{ interviewView.result }}</span></td>
-                            </tr>
-                            <tr>
-                                <th>Présence</th>
-                                <td><span class="badge-soft badge-gold">{{ interviewView.attendanceStatus }}</span></td>
-                            </tr>
-                            <tr>
                                 <th>Demandé le</th>
                                 <td>{{ interviewView.requestDate ? interviewView.requestDate|date('d/m/Y H:i') : '-' }}</td>
                             </tr>
@@ -59,9 +47,11 @@
                 </div>
 
                 <div class="action-wrap mb-2">
-                    <a href="{{ path('interview_edit', {id: interviewView.id}) }}" class="btn soft-btn btn-blue"><i class="bi bi-pencil-fill me-1"></i>Éditer</a>
+                    {% if is_granted('ROLE_RECRUITER') %}
+                        <a href="{{ path('interview_edit', {id: interviewView.id}) }}" class="btn soft-btn btn-blue"><i class="bi bi-pencil-fill me-1"></i>Éditer</a>
+                    {% endif %}
 
-                    {% if interviewView.status == 'PENDING' %}
+                    {% if is_granted('ROLE_CANDIDATE') and interview.status == 'PENDING' %}
                         <form method="post" action="{{ path('interview_accept', {id: interviewView.id}) }}" class="d-inline">
                             <input type="hidden" name="_token" value="{{ csrf_token('accept' ~ interviewView.id) }}">
                             <button type="submit" class="btn soft-btn btn-green"><i class="bi bi-check-circle-fill me-1"></i>Accepter</button>
@@ -73,31 +63,23 @@
                         </form>
                     {% endif %}
 
-                    {% if interviewView.attendanceStatus == 'PLANNED' %}
-                        <form method="post" action="{{ path('interview_complete', {id: interviewView.id}) }}" class="d-inline">
-                            <input type="hidden" name="_token" value="{{ csrf_token('complete' ~ interviewView.id) }}">
-                            <button type="submit" class="btn soft-btn btn-cyan"><i class="bi bi-check2-all me-1"></i>Terminé</button>
-                        </form>
-
-                        <form method="post" action="{{ path('interview_no_show', {id: interviewView.id}) }}" class="d-inline">
-                            <input type="hidden" name="_token" value="{{ csrf_token('noshow' ~ interviewView.id) }}">
-                            <button type="submit" class="btn soft-btn btn-gold"><i class="bi bi-ban me-1"></i>No-show</button>
-                        </form>
-                    {% endif %}
-
-                    {% if interviewView.status != 'CANCELLED' %}
+                    {% if is_granted('ROLE_RECRUITER') and interview.status != 'CANCELLED' %}
                         <form method="post" action="{{ path('interview_cancel', {id: interviewView.id}) }}" class="d-inline">
                             <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ interviewView.id) }}">
                             <button type="submit" class="btn soft-btn btn-outline-red"><i class="bi bi-dash-circle-fill me-1"></i>Annuler</button>
                         </form>
                     {% endif %}
 
-                    <button class="btn soft-btn btn-outline-slate" onclick="if(confirm('Êtes-vous sûr ?')) { document.getElementById('deleteForm').submit(); }"><i class="bi bi-trash3-fill me-1"></i>Supprimer</button>
+                    {% if is_granted('ROLE_RECRUITER') %}
+                        <button class="btn soft-btn btn-outline-slate" onclick="if(confirm('Êtes-vous sûr ?')) { document.getElementById('deleteForm').submit(); }"><i class="bi bi-trash3-fill me-1"></i>Supprimer</button>
+                    {% endif %}
                 </div>
 
-                <form id="deleteForm" method="post" action="{{ path('interview_delete', {id: interviewView.id}) }}" style="display: none;">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ interviewView.id) }}">
-                </form>
+                {% if is_granted('ROLE_RECRUITER') %}
+                    <form id="deleteForm" method="post" action="{{ path('interview_delete', {id: interviewView.id}) }}" style="display: none;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ interviewView.id) }}">
+                    </form>
+                {% endif %}
             </div>
         </div>
     </div>

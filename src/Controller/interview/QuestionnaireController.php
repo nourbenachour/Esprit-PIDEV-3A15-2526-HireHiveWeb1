@@ -88,6 +88,8 @@ class QuestionnaireController extends AbstractController
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $postedJobTitle = '';
         $postedQuestions = [''];
 
@@ -160,6 +162,8 @@ class QuestionnaireController extends AbstractController
     #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
     public function edit(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $questionnaire = $this->repository->find($id);
 
         if (!$questionnaire) {
@@ -284,6 +288,8 @@ class QuestionnaireController extends AbstractController
     #[Route('/{id}/delete', name: 'delete', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function delete(int $id, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_RECRUITER');
+
         $questionnaire = $this->repository->find($id);
 
         if (!$questionnaire) {

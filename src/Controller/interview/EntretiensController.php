@@ -2,8 +2,12 @@
 
 namespace App\Controller\interview;
 
+use App\Entity\Interview;
+use App\Entity\Recruiter;
+use App\Entity\Users;
 use App\Repository\interview\ContractRepository;
 use App\Repository\interview\InterviewRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use App\Service\interview\InterviewService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,6 +16,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class EntretiensController extends AbstractController
 {
+    public function __construct(private EntityManagerInterface $em)
+    {
+    }
+
     private const MONTHS_FR = [
         1 => 'Janvier',
         2 => 'Fevrier',
@@ -50,10 +58,63 @@ class EntretiensController extends AbstractController
         }
 
         $interviews = $repository->findByFilters($searchText, $status, $dateFrom, $dateTo);
+        $interviews = $this->filterInterviewsByCurrentRole($interviews);
 
         return $this->render('interview/interview/index.html.twig', [
             'interviews' => $interviews,
             'statuses' => InterviewService::VALID_STATUSES,
+            'canManageInterviews' => $this->isGranted('ROLE_RECRUITER'),
+        ]);
+    }
+
+    #[Route('/backoffice/interviews', name: 'interview_backoffice_admin', methods: ['GET'], priority: 200)]
+    public function adminBackoffice(Request $request, InterviewRepository $interviewRepository, ContractRepository $contractRepository): Response
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        $interviewSearch = $request->query->get('i_search');
+        $interviewStatus = $request->query->get('i_status');
+        $interviewFrom = null;
+        $interviewTo = null;
+
+        $contractSearch = $request->query->get('c_search');
+        $contractStatus = $request->query->get('c_status');
+        $contractFrom = null;
+        $contractTo = null;
+
+        if ($request->query->get('i_from')) {
+            try {
+                $interviewFrom = new \DateTime((string) $request->query->get('i_from'));
+            } catch (\Exception) {
+            }
+        }
+
+        if ($request->query->get('i_to')) {
+            try {
+                $interviewTo = new \DateTime((string) $request->query->get('i_to'));
+            } catch (\Exception) {
+            }
+        }
+
+        if ($request->query->get('c_from')) {
+            try {
+                $contractFrom = new \DateTime((string) $request->query->get('c_from'));
+            } catch (\Exception) {
+            }
+        }
+
+        if ($request->query->get('c_to')) {
+            try {
+                $contractTo = new \DateTime((string) $request->query->get('c_to'));
+            } catch (\Exception) {
+            }
+        }
+
+        return $this->render('interview/entretiens/admin_index.html.twig', [
+            'interviews' => $interviewRepository->findByFilters($interviewSearch, $interviewStatus, $interviewFrom, $interviewTo),
+            'contracts' => $contractRepository->findByFilters($contractSearch, $contractStatus, $contractFrom, $contractTo),
+            'interviewStatuses' => InterviewService::VALID_STATUSES,
+            'contractStatuses' => \App\Service\interview\ContractService::VALID_STATUSES,
         ]);
     }
 
@@ -191,5 +252,64 @@ class EntretiensController extends AbstractController
             'pendingInterviews' => $interviewRepository->countByStatus('PENDING'),
             'signedContracts' => $contractRepository->countByStatus('SIGNED'),
         ]);
+    }
+
+    private function filterInterviewsByCurrentRole(array $interviews): array
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return $interviews;
+        }
+
+        if ($this->isGranted('ROLE_RECRUITER')) {
+            $company = $this->resolveRecruiterCompanyName();
+            if ($company === null) {
+                return [];
+            }
+
+            return array_values(array_filter($interviews, fn (Interview $i): bool => $this->sameText((string) $i->getCompanyName(), $company)));
+        }
+
+        if ($this->isGranted('ROLE_CANDIDATE')) {
+            $candidateName = $this->resolveCandidateFullName();
+            if ($candidateName === null) {
+                return [];
+            }
+
+            return array_values(array_filter($interviews, fn (Interview $i): bool => $this->sameText((string) $i->getCandidateName(), $candidateName)));
+        }
+
+        return [];
+    }
+
+    private function resolveRecruiterCompanyName(): ?string
+    {
+        $user = $this->getUser();
+        if (!$user instanceof Users) {
+            return null;
+        }
+
+        $recruiter = $this->em->getRepository(Recruiter::class)->findOneBy(['user_id' => $user]);
+        if (!$recruiter instanceof Recruiter) {
+            return null;
+        }
+
+        $companyName = trim((string) $recruiter->getCompany_name());
+        return $companyName === '' ? null : $companyName;
+    }
+
+    private function resolveCandidateFullName(): ?string
+    {
+        $user = $this->getUser();
+        if (!$user instanceof Users) {
+            return null;
+        }
+
+        $fullName = trim(sprintf('%s %s', (string) $user->getFirst_name(), (string) $user->getLast_name()));
+        return $fullName === '' ? null : $fullName;
+    }
+
+    private function sameText(string $a, string $b): bool
+    {
+        return mb_strtolower(trim($a)) === mb_strtolower(trim($b));
     }
 }

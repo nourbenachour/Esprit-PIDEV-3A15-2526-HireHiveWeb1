@@ -26,9 +26,11 @@
                     </div>
                 </form>
 
-                <div class="d-flex justify-content-end mb-3">
-                    <a href="{{ path('contract_new') }}" class="btn soft-btn soft-btn-primary">Créer un contrat</a>
-                </div>
+                {% if canManageContracts|default(false) %}
+                    <div class="d-flex justify-content-end mb-3">
+                        <a href="{{ path('contract_new') }}" class="btn soft-btn soft-btn-primary">Créer un contrat</a>
+                    </div>
+                {% endif %}
 
                 <div class="table-wrap">
                     <div class="grid-table grid-contracts-cols">
@@ -52,11 +54,13 @@
                             <div class="grid-cell">{{ contract.endDate|date('d/m/Y') }}</div>
                             <div class="grid-cell actions-cell">
                                 <a href="{{ path('contract_show', {id: contract.idContrat}) }}" class="action-btn" title="Voir"><i class="bi bi-eye"></i></a>
-                                <a href="{{ path('contract_edit', {id: contract.idContrat}) }}" class="action-btn" title="Modifier"><i class="bi bi-pencil-square"></i></a>
-                                <form method="post" action="{{ path('contract_delete', {id: contract.idContrat}) }}" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
-                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contract.idContrat) }}">
-                                    <button type="submit" class="action-btn" title="Supprimer"><i class="bi bi-trash"></i></button>
-                                </form>
+                                {% if canManageContracts|default(false) %}
+                                    <a href="{{ path('contract_edit', {id: contract.idContrat}) }}" class="action-btn" title="Modifier"><i class="bi bi-pencil-square"></i></a>
+                                    <form method="post" action="{{ path('contract_delete', {id: contract.idContrat}) }}" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contract.idContrat) }}">
+                                        <button type="submit" class="action-btn" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                {% endif %}
                             </div>
                         {% endfor %}
                     {% endif %}

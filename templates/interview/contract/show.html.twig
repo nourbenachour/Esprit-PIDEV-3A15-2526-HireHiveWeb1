@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Détail Contrat #{{ contractView.id }}{% endblock %}
+{% block title %}Détail Contrat{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -39,10 +39,6 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Statut</th>
-                            <td><span class="status-chip">{{ contractView.status }}</span></td>
-                        </tr>
-                        <tr>
                             <th>Signé le</th>
                             <td>
                                 {% if contractView.signedAt and contractView.status == 'SIGNED' %}
@@ -66,75 +62,86 @@
 
             <!-- Actions -->
             <div class="mt-4 mb-4 d-flex flex-wrap gap-2">
-                <a href="{{ path('contract_edit', {id: contractView.id}) }}" class="btn soft-btn soft-btn-primary"><i class="bi bi-pencil-square"></i> Modifier</a>
+                {% if is_granted('ROLE_RECRUITER') %}
+                    <a href="{{ path('contract_edit', {id: contractView.id}) }}" class="btn soft-btn soft-btn-primary"><i class="bi bi-pencil-square"></i> Modifier</a>
+                {% endif %}
 
-                {% if contractView.status == 'PENDING' %}
+                {% if is_granted('ROLE_RECRUITER') and contractView.status == 'PENDING' %}
                     <form method="post" action="{{ path('contract_send', {id: contractView.id}) }}" style="display: inline;">
                         <input type="hidden" name="_token" value="{{ csrf_token('send' ~ contractView.id) }}">
                         <button type="submit" class="btn soft-btn soft-btn-primary"><i class="bi bi-send"></i> Envoyer</button>
                     </form>
                 {% endif %}
 
-                {% if contractView.status == 'SENT' and not contractView.signature %}
+                {% if is_granted('ROLE_CANDIDATE') and contractView.status == 'SENT' and not contractView.signature %}
                     <button class="btn soft-btn soft-btn-primary" data-bs-toggle="modal" data-bs-target="#signModal"><i class="bi bi-pen"></i> Signer</button>
                 {% endif %}
 
-                {% if contractView.status == 'SENT' %}
-                    <form method="post" action="{{ path('contract_reject', {id: contractView.id}) }}" style="display: inline;">
-                        <input type="hidden" name="_token" value="{{ csrf_token('reject' ~ contractView.id) }}">
-                        <button type="submit" class="btn soft-btn soft-btn-danger"><i class="bi bi-x-circle"></i> Refuser</button>
-                    </form>
+                {% if is_granted('ROLE_RECRUITER') %}
+                    <button class="btn soft-btn soft-btn-light" onclick="if(confirm('Êtes-vous sûr ?')) { document.getElementById('deleteForm').submit(); }"><i class="bi bi-trash"></i> Supprimer</button>
                 {% endif %}
-
-                <button class="btn soft-btn soft-btn-light" onclick="if(confirm('Êtes-vous sûr ?')) { document.getElementById('deleteForm').submit(); }"><i class="bi bi-trash"></i> Supprimer</button>
             </div>
 
-            <form id="deleteForm" method="post" action="{{ path('contract_delete', {id: contractView.id}) }}" style="display: none;">
-                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contractView.id) }}">
-            </form>
+            {% if is_granted('ROLE_RECRUITER') %}
+                <form id="deleteForm" method="post" action="{{ path('contract_delete', {id: contractView.id}) }}" style="display: none;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ contractView.id) }}">
+                </form>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <!-- Modal Signature -->
-<div class="modal fade" id="signModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Signer le Contrat</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+{% if is_granted('ROLE_CANDIDATE') %}
+    <div class="modal fade" id="signModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Signer le Contrat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{{ path('contract_sign', {id: contractView.id}) }}">
+                    <div class="modal-body">
+                        <input type="hidden" name="_token" value="{{ csrf_token('sign' ~ contractView.id) }}">
+                        <input type="hidden" name="signature" id="signatureInput">
+                        
+                        <p class="text-muted">Veuillez signer dans le cadre ci-dessous:</p>
+                        <canvas id="signaturePad" width="400" height="150" style="border: 1px solid #ccc; cursor: crosshair;"></canvas>
+                        <button type="button" class="btn btn-sm btn-warning mt-2" onclick="clearSignature()">Effacer</button>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">✅ Signer</button>
+                    </div>
+                </form>
             </div>
-            <form method="post" action="{{ path('contract_sign', {id: contractView.id}) }}">
-                <div class="modal-body">
-                    <input type="hidden" name="_token" value="{{ csrf_token('sign' ~ contractView.id) }}">
-                    <input type="hidden" name="signature" id="signatureInput">
-                    
-                    <p class="text-muted">Veuillez signer dans le cadre ci-dessous:</p>
-                    <canvas id="signaturePad" width="400" height="150" style="border: 1px solid #ccc; cursor: crosshair;"></canvas>
-                    <button type="button" class="btn btn-sm btn-warning mt-2" onclick="clearSignature()">Effacer</button>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" class="btn btn-primary">✅ Signer</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
+{% endif %}
 
 <script>
 // Signature pad simple (canvas)
 const canvas = document.getElementById('signaturePad');
-const ctx = canvas.getContext('2d');
-let isDrawing = false;
+if (canvas) {
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
 
-canvas.addEventListener('mousedown', (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
-canvas.addEventListener('mousemove', (e) => { if (isDrawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } });
-canvas.addEventListener('mouseup', () => { isDrawing = false; document.getElementById('signatureInput').value = canvas.toDataURL(); });
+    canvas.addEventListener('mousedown', (e) => { isDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
+    canvas.addEventListener('mousemove', (e) => { if (isDrawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } });
+    canvas.addEventListener('mouseup', () => { isDrawing = false; document.getElementById('signatureInput').value = canvas.toDataURL(); });
+}
 
 function clearSignature() {
+    if (!canvas) {
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    document.getElementById('signatureInput').value = '';
+    const signatureInput = document.getElementById('signatureInput');
+    if (signatureInput) {
+        signatureInput.value = '';
+    }
 }
 </script>
 

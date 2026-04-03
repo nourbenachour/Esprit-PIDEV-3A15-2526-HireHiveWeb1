@@ -10,7 +10,7 @@
         </div>
         <div class="col-lg-9">
             <div class="form-shell">
-            <h1 class="module-title mb-3">Modifier l'entretien #{{ interview.idInterview }}</h1>
+            <h1 class="module-title mb-3">Modifier l'entretien</h1>
             <p class="text-muted mb-4">Mettez à jour les informations de l'entretien.</p>
 
             {{ form_start(form) }}
@@ -46,25 +46,6 @@
                         {{ form_widget(form.heureFin, {'attr': {'class': 'form-control soft-input'}}) }}
                         {{ form_errors(form.heureFin) }}
                 </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                        {{ form_label(form.status, 'Statut *', {'label_attr': {'class': 'field-label'}}) }}
-                        {{ form_widget(form.status, {'attr': {'class': 'form-control soft-input'}}) }}
-                        {{ form_errors(form.status) }}
-                </div>
-                <div class="col-md-6 mb-3">
-                        {{ form_label(form.result, 'Résultat *', {'label_attr': {'class': 'field-label'}}) }}
-                        {{ form_widget(form.result, {'attr': {'class': 'form-control soft-input'}}) }}
-                        {{ form_errors(form.result) }}
-                </div>
-            </div>
-
-            <div class="mb-3">
-                {{ form_label(form.attendanceStatus, 'Statut de présence *', {'label_attr': {'class': 'field-label'}}) }}
-                {{ form_widget(form.attendanceStatus, {'attr': {'class': 'form-control soft-input'}}) }}
-                {{ form_errors(form.attendanceStatus) }}
             </div>
 
             <p class="help-line">Format heures: HH:mm (ex: 09:30). L'heure de fin doit être après l'heure de début.</p>
