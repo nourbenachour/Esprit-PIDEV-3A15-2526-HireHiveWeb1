@@ -9,7 +9,12 @@
             {% include 'interview/_sidebar.html.twig' %}
         </div>
         <div class="col-lg-9">
-            <h1 class="module-title mb-3">Contrats</h1>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h1 class="module-title mb-0">Contrats</h1>
+                {% if canManageContracts|default(false) %}
+                    <a href="{{ path('contract_new') }}" class="btn soft-btn soft-btn-primary">Créer un contrat</a>
+                {% endif %}
+            </div>
 
             <div class="module-card p-3 p-md-4">
                 <form method="get" class="filter-panel mb-3">
@@ -25,12 +30,6 @@
                         <a href="{{ path('contract_index') }}" class="btn soft-btn soft-btn-light">Réinitialiser</a>
                     </div>
                 </form>
-
-                {% if canManageContracts|default(false) %}
-                    <div class="d-flex justify-content-end mb-3">
-                        <a href="{{ path('contract_new') }}" class="btn soft-btn soft-btn-primary">Créer un contrat</a>
-                    </div>
-                {% endif %}
 
                 <div class="table-wrap">
                     <div class="grid-table grid-contracts-cols">

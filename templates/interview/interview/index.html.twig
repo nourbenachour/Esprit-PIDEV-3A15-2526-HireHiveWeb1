@@ -9,59 +9,57 @@
             {% include 'interview/_sidebar.html.twig' %}
         </div>
         <div class="col-lg-9">
-            <h1 class="module-title mb-4">Entretiens</h1>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                <h1 class="module-title mb-0">Entretiens</h1>
+                {% if canManageInterviews|default(false) %}
+                    <a href="{{ path('interview_new') }}" class="btn soft-btn soft-btn-primary">Créer un entretien</a>
+                {% endif %}
+            </div>
 
-            <div class="module-card mb-4">
-                <div class="module-card-body">
-                    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
-                        <input type="text" name="search" class="form-control soft-input" placeholder="Recherche.." value="{{ app.request.query.get('search') ?? '' }}">
+            <div class="module-card p-3 p-md-4">
+                <form method="get" class="filter-panel mb-3">
+                    <div class="filter-row filter-row-search">
+                        <input type="text" name="search" class="form-control soft-input search-input" placeholder="Recherche.." value="{{ app.request.query.get('search') ?? '' }}">
+                    </div>
+                    <div class="filter-row filter-row-controls">
                         <span class="filter-label">Du :</span>
                         <input type="date" name="dateFrom" class="form-control soft-input date-input" value="{{ app.request.query.get('dateFrom') ?? '' }}" placeholder="De">
                         <span class="filter-label">Au :</span>
                         <input type="date" name="dateTo" class="form-control soft-input date-input" value="{{ app.request.query.get('dateTo') ?? '' }}" placeholder="À">
                         <button type="submit" class="btn soft-btn soft-btn-primary">Filtrer</button>
                         <a href="{{ path('app_frontoffice_interviews') }}" class="btn soft-btn soft-btn-light">Réinitialiser</a>
-                    </form>
-                </div>
-            </div>
+                    </div>
+                </form>
 
-            {% if canManageInterviews|default(false) %}
-                <div class="d-flex justify-content-end mb-3">
-                    <a href="{{ path('interview_new') }}" class="btn soft-btn soft-btn-primary">Créer un entretien</a>
-                </div>
-            {% endif %}
+                <div class="table-wrap">
+                    <div class="grid-table grid-interviews-cols">
+                        <div class="grid-head">Candidat</div>
+                        <div class="grid-head">Entreprise</div>
+                        <div class="grid-head">Date</div>
+                        <div class="grid-head">Heure</div>
+                        <div class="grid-head">Actions</div>
 
-            <div class="module-card">
-                <div class="module-card-body p-4">
-                    <div class="table-wrap">
-                        <div class="grid-table grid-interviews-cols">
-                            <div class="grid-head">Candidat</div>
-                            <div class="grid-head">Entreprise</div>
-                            <div class="grid-head">Date</div>
-                            <div class="grid-head">Heure</div>
-                            <div class="grid-head">Actions</div>
-
-                        {% if interviews is empty %}
-                            <div class="grid-empty">Aucun entretien trouvé</div>
-                        {% else %}
-                            {% for interview in interviews %}
-                                <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="grid-cell cell-link">{{ interview.candidateName }}</a>
-                                <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="grid-cell cell-link">{{ interview.companyName }}</a>
-                                <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="grid-cell cell-link">{{ interview.interviewDate|date('d/m/Y') }}</a>
-                                <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="grid-cell cell-link">{{ (interview.heureDebut ~ '')|slice(0, 5) }} - {{ (interview.heureFin ~ '')|slice(0, 5) }}</a>
-                                <div class="grid-cell actions-cell">
-                                    {% if canManageInterviews|default(false) %}
-                                        <a href="{{ path('interview_edit', {id: interview.idInterview}) }}" class="action-btn" title="Modifier"><i class="bi bi-pencil-square"></i></a>
-                                        <form method="post" action="{{ path('interview_delete', {id: interview.idInterview}) }}" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ interview.idInterview) }}">
-                                            <button type="submit" class="action-btn danger" title="Supprimer"><i class="bi bi-trash"></i></button>
-                                        </form>
-                                    {% else %}
-                                        <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="action-btn" title="Voir"><i class="bi bi-eye"></i></a>
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                        {% endif %}
+                    {% if interviews is empty %}
+                        <div class="grid-empty">Aucun entretien trouvé</div>
+                    {% else %}
+                        {% for interview in interviews %}
+                            <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="grid-cell cell-link">{{ interview.candidateName }}</a>
+                            <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="grid-cell cell-link">{{ interview.companyName }}</a>
+                            <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="grid-cell cell-link">{{ interview.interviewDate|date('d/m/Y') }}</a>
+                            <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="grid-cell cell-link">{{ (interview.heureDebut ~ '')|slice(0, 5) }} - {{ (interview.heureFin ~ '')|slice(0, 5) }}</a>
+                            <div class="grid-cell actions-cell">
+                                {% if canManageInterviews|default(false) %}
+                                    <a href="{{ path('interview_edit', {id: interview.idInterview}) }}" class="action-btn" title="Modifier"><i class="bi bi-pencil-square"></i></a>
+                                    <form method="post" action="{{ path('interview_delete', {id: interview.idInterview}) }}" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ interview.idInterview) }}">
+                                        <button type="submit" class="action-btn danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                {% else %}
+                                    <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="action-btn" title="Voir"><i class="bi bi-eye"></i></a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
                     </div>
                 </div>
             </div>
@@ -72,8 +70,12 @@
 <style>
 .module-title { color: #ff6a00; font-weight: 800; letter-spacing: 0.2px; font-size: 1.85rem; }
 .module-card { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 18px; }
-.module-card-body { padding: 12px 14px; }
+.filter-panel { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid #dde3ef; border-radius: 14px; background: #f1f4f9; margin-bottom: 12px; }
+.filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.filter-row-search { width: 100%; }
+.filter-row-controls { width: 100%; }
 .soft-input { border-radius: 12px; border: 1px solid #d4daea; background: #fff; min-height: 44px; }
+.search-input { width: 100%; }
 .date-input { max-width: 170px; }
 .filter-label { font-weight: 700; color: #1f2a44; }
 .soft-btn { border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 0.95rem; border: 0; }
