@@ -48,7 +48,6 @@
                                 <div class="grid-cell">{{ interview.interviewDate|date('d/m/Y') }}</div>
                                 <div class="grid-cell">{{ (interview.heureDebut ~ '')|slice(0, 5) }} - {{ (interview.heureFin ~ '')|slice(0, 5) }}</div>
                                 <div class="grid-cell actions-cell">
-                                    <a href="{{ path('interview_show', {id: interview.idInterview}) }}" class="action-btn" title="Voir"><i class="bi bi-eye"></i></a>
                                     <a href="{{ path('interview_edit', {id: interview.idInterview}) }}" class="action-btn" title="Modifier"><i class="bi bi-pencil-square"></i></a>
                                     <form method="post" action="{{ path('interview_delete', {id: interview.idInterview}) }}" class="d-inline" onsubmit="return confirm('Êtes-vous sûr ?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ interview.idInterview) }}">
@@ -77,11 +76,11 @@
 .soft-btn-light { background: #ece8ff; color: #6c2bd9; }
 .table-wrap { width: 100%; overflow-x: auto; }
 .grid-table { display: grid; gap: 5px; }
-.grid-interviews-cols { min-width: 860px; grid-template-columns: minmax(140px, 1.1fr) minmax(140px, 1.1fr) minmax(110px, 0.85fr) minmax(140px, 0.95fr) 170px; }
+.grid-interviews-cols { min-width: 800px; grid-template-columns: minmax(140px, 1.1fr) minmax(140px, 1.1fr) minmax(110px, 0.85fr) minmax(140px, 0.95fr) max-content; }
 .grid-head { background: #d2d7e0; border: 1px solid #c6cfdd; border-radius: 11px; color: #0d1b3f; font-size: 0.98rem; font-weight: 800; padding: 10px 12px; min-height: 50px; display: flex; align-items: center; }
 .grid-cell { background: #f5f7fb; border: 1px solid #dbe2ee; border-radius: 11px; padding: 10px 12px; font-size: 0.95rem; color: #27364f; min-height: 50px; display: flex; align-items: center; }
 .grid-empty { grid-column: 1 / -1; background: #f8f9fd; border: 1px dashed #d4dbe8; border-radius: 12px; padding: 22px; text-align: center; color: #64748b; font-weight: 600; }
-.actions-cell { white-space: nowrap; }
+.actions-cell { white-space: nowrap; padding: 8px 10px; }
 .action-btn { width: 34px; height: 34px; border-radius: 50%; border: 0; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; margin-right: 6px; box-shadow: 0 3px 8px rgba(124, 58, 237, 0.26); text-decoration: none; }
 .actions-cell .action-btn:last-child { margin-right: 0; }
 .action-btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }

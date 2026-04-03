@@ -43,12 +43,14 @@ class QuestionnaireType extends AbstractType
                 'label' => 'Options de réponse (JSON: ["option1", "option2", ...])',
                 'attr' => ['class' => 'form-control', 'rows' => 3],
                 'required' => false,
+                'empty_data' => '',
                 'help' => 'Format JSON obligatoire si rempli',
             ])
             ->add('correctAnswer', TextType::class, [
                 'label' => 'Réponse correcte',
                 'attr' => ['class' => 'form-control'],
                 'required' => false,
+                'empty_data' => '',
             ])
         ;
     }

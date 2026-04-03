@@ -55,7 +55,7 @@
                                         <a href="{{ path('questionnaire_edit', {id: firstQuestion.id}) }}" class="action-pill" title="Modifier">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
-                                        <form method="post" action="{{ path('questionnaire_delete', {id: firstQuestion.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer cette question ?');">
+                                        <form method="post" action="{{ path('questionnaire_delete', {id: firstQuestion.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce questionnaire et toutes ses questions ?');">
                                             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ firstQuestion.id) }}">
                                             <button type="submit" class="action-pill danger" title="Supprimer">
                                                 <i class="bi bi-trash"></i>

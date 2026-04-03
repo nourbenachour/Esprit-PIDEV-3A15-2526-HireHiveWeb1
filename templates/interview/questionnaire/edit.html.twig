@@ -1,46 +1,144 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Éditer Question{% endblock %}
+{% block title %}Modifier questionnaire{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <h1 class="mb-4">Éditer la Question #{{ questionnaire.idQuestionnaire }}</h1>
+<div class="container-fluid mt-4">
+    <div class="row g-3">
+        <div class="col-lg-3">
+            {% include 'interview/_sidebar.html.twig' %}
+        </div>
+        <div class="col-lg-9">
+            <div class="module-card p-3 p-md-4">
+                <h1 class="module-title mb-3">Modifier le questionnaire</h1>
 
-            {{ form_start(form) }}
+                <form method="post" id="questionnaire-form">
+                    <div class="mb-3">
+                        <label for="jobTitle" class="form-label form-label-accent">Titre du poste *</label>
+                        <input
+                            type="text"
+                            id="jobTitle"
+                            name="jobTitle"
+                            class="form-control form-control-soft"
+                            value="{{ jobTitle|default('') }}"
+                            required
+                        >
+                    </div>
 
-            <div class="mb-3">
-                {{ form_label(form.jobTitle, 'Intitulé du poste') }}
-                {{ form_widget(form.jobTitle) }}
-                {{ form_errors(form.jobTitle) }}
+                    <hr class="my-3">
+
+                    <h2 class="section-title">Questions du questionnaire</h2>
+                    <div id="questions-wrapper" class="questions-editor">
+                        {% for row in questions %}
+                            <div class="question-row">
+                                <input type="hidden" name="questions[{{ loop.index0 }}][id]" value="{{ row.id is not null ? row.id : '' }}">
+                                <input
+                                    type="text"
+                                    name="questions[{{ loop.index0 }}][text]"
+                                    class="form-control form-control-soft"
+                                    value="{{ row.text|default('') }}"
+                                    placeholder="Saisissez uniquement les questions."
+                                >
+                                <button type="button" class="btn-remove-question" title="Supprimer">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        <button type="button" id="add-question" class="btn soft-btn soft-btn-outline">+ Ajouter une question</button>
+                    </div>
+
+                    <p class="helper-text mt-2 mb-0">Supprimez une ligne pour supprimer la question correspondante.</p>
+
+                    <div class="d-flex justify-content-end flex-wrap gap-2 mt-4">
+                        <button type="submit" class="btn soft-btn soft-btn-primary">Enregistrer</button>
+                        <a href="{{ path('questionnaire_index') }}" class="btn soft-btn soft-btn-outline">Annuler</a>
+                    </div>
+                </form>
             </div>
-
-            <div class="mb-3">
-                {{ form_label(form.questionText, 'Texte de la question') }}
-                {{ form_widget(form.questionText) }}
-                {{ form_errors(form.questionText) }}
-            </div>
-
-            <div class="mb-3">
-                {{ form_label(form.answerOptions, 'Options de réponse (optionnel)') }}
-                {{ form_widget(form.answerOptions) }}
-                {{ form_errors(form.answerOptions) }}
-            </div>
-
-            <div class="mb-3">
-                {{ form_label(form.correctAnswer, 'Réponse correcte (optionnel)') }}
-                {{ form_widget(form.correctAnswer) }}
-                {{ form_errors(form.correctAnswer) }}
-            </div>
-
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">✅ Enregistrer</button>
-                <a href="{{ path('questionnaire_index') }}" class="btn btn-secondary">❌ Annuler</a>
-            </div>
-
-            {{ form_end(form) }}
         </div>
     </div>
 </div>
+
+<style>
+.module-card { background: #f6f7fb; border: 1px solid #dfe4ef; border-radius: 18px; }
+.module-title { color: #0f1b3e; font-weight: 800; font-size: 2rem; }
+.section-title { color: #1f2a44; font-weight: 800; font-size: 1.3rem; margin-bottom: 10px; }
+.form-label-accent { color: #6c2bd9; font-weight: 700; }
+.form-control-soft { border-radius: 12px; border: 1px solid #d4dceb; background: #fff; }
+.form-control-soft:focus { border-color: #8f4bff; box-shadow: 0 0 0 .2rem rgba(143, 75, 255, .15); }
+.questions-editor { background: #f1f3f8; border: 1px solid #e0e6f2; border-radius: 14px; padding: 12px; min-height: 320px; }
+.question-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; }
+.btn-remove-question { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #f1c2c8; color: #dc3545; background: #fff; font-size: 1.3rem; line-height: 1; }
+.btn-remove-question:hover { background: #fff5f6; }
+.soft-btn { border-radius: 999px; padding: 9px 18px; font-weight: 700; font-size: 0.95rem; border: 1px solid transparent; }
+.soft-btn-primary { background: linear-gradient(135deg, #6c2bd9, #8f4bff); color: #fff; box-shadow: 0 6px 16px rgba(108, 43, 217, 0.35); }
+.soft-btn-outline { background: #fff; border-color: #d6c4ff; color: #7a3eed; }
+.helper-text { color: #7b889f; font-size: .94rem; }
+</style>
+
+<script>
+(function () {
+    const wrapper = document.getElementById('questions-wrapper');
+    const addBtn = document.getElementById('add-question');
+    if (!wrapper || !addBtn) {
+        return;
+    }
+
+    function reindexRows() {
+        wrapper.querySelectorAll('.question-row').forEach((row, index) => {
+            const idInput = row.querySelector('input[name*="[id]"]');
+            const textInput = row.querySelector('input[name*="[text]"]');
+            if (idInput) {
+                idInput.name = 'questions[' + index + '][id]';
+            }
+            if (textInput) {
+                textInput.name = 'questions[' + index + '][text]';
+            }
+        });
+    }
+
+    function createRow(textValue) {
+        const row = document.createElement('div');
+        row.className = 'question-row';
+        row.innerHTML = '' +
+            '<input type="hidden" name="questions[0][id]" value="">' +
+            '<input type="text" name="questions[0][text]" class="form-control form-control-soft" placeholder="Saisissez uniquement les questions." value="">' +
+            '<button type="button" class="btn-remove-question" title="Supprimer">&times;</button>';
+
+        const input = row.querySelector('input[name*="[text]"]');
+        if (input && typeof textValue === 'string') {
+            input.value = textValue;
+        }
+
+        wrapper.appendChild(row);
+        reindexRows();
+    }
+
+    addBtn.addEventListener('click', function () {
+        createRow('');
+    });
+
+    wrapper.addEventListener('click', function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement) || !target.classList.contains('btn-remove-question')) {
+            return;
+        }
+
+        const rows = wrapper.querySelectorAll('.question-row');
+        if (rows.length <= 1) {
+            const input = rows[0].querySelector('input[name*="[text]"]');
+            if (input) {
+                input.value = '';
+            }
+            return;
+        }
+
+        target.closest('.question-row')?.remove();
+        reindexRows();
+    });
+
+    reindexRows();
+})();
+</script>
 {% endblock %}

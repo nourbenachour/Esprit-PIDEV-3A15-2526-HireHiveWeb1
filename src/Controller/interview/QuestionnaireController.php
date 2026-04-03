@@ -3,7 +3,6 @@
 namespace App\Controller\interview;
 
 use App\Entity\Questionnaire;
-use App\Form\interview\QuestionnaireType;
 use App\Repository\interview\QuestionnaireRepository;
 use App\Service\interview\QuestionnaireService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -89,64 +88,194 @@ class QuestionnaireController extends AbstractController
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
-        $questionnaire = new Questionnaire();
-        $form = $this->createForm(QuestionnaireType::class, $questionnaire);
-        $form->handleRequest($request);
+        $postedJobTitle = '';
+        $postedQuestions = [''];
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($request->isMethod('POST')) {
+            $postedJobTitle = trim((string) $request->request->get('jobTitle', ''));
+            $questionRows = $request->request->all('questions');
+            $rawQuestions = [];
+
+            foreach ($questionRows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $rawQuestions[] = trim((string) ($row['text'] ?? ''));
+            }
+
+            $validQuestions = array_values(array_filter($rawQuestions, static fn (string $q): bool => $q !== ''));
+
             try {
-                $this->service->validateJobTitle($questionnaire->getJobTitle());
-                $this->service->validateQuestionText($questionnaire->getQuestionText());
-                $this->service->validateAnswerOptions($questionnaire->getAnswerOptions());
+                $this->service->validateJobTitle($postedJobTitle);
 
-                $this->em->persist($questionnaire);
+                if ($validQuestions === []) {
+                    throw new \InvalidArgumentException('Ajoutez au moins une question.');
+                }
+
+                $nextId = $this->getNextQuestionnaireId();
+                foreach ($validQuestions as $questionText) {
+                    $this->service->validateQuestionText($questionText);
+
+                    $questionnaire = $this->service->createQuestionnaire(
+                        $postedJobTitle,
+                        $questionText,
+                        '',
+                        ''
+                    );
+                    $questionnaire->setIdQuestionnaire($nextId++);
+                    $this->em->persist($questionnaire);
+                }
+
                 $this->em->flush();
 
-                $this->addFlash('success', 'Question créée avec succès');
+                $this->addFlash('success', 'Questionnaire créé avec succès');
                 return $this->redirectToRoute('questionnaire_index');
             } catch (\InvalidArgumentException $e) {
                 $this->addFlash('error', 'Erreur: ' . $e->getMessage());
+                $postedQuestions = $rawQuestions !== [] ? $rawQuestions : [''];
             }
         }
 
         return $this->render('interview/questionnaire/new.html.twig', [
-            'form' => $form,
+            'jobTitle' => $postedJobTitle,
+            'questions' => $postedQuestions,
         ]);
     }
 
+    private function getNextQuestionnaireId(): int
+    {
+        $maxId = (int) $this->em->createQueryBuilder()
+            ->select('COALESCE(MAX(q.idQuestionnaire), 0)')
+            ->from(Questionnaire::class, 'q')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $maxId + 1;
+    }
+
     /**
-     * Formulaire d'édition d'une question.
+     * Formulaire d'édition d'un questionnaire (plusieurs questions).
      */
     #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
     public function edit(int $id, Request $request): Response
     {
-        $questionnaire = $this->em->getRepository(Questionnaire::class)->find($id);
+        $questionnaire = $this->repository->find($id);
 
         if (!$questionnaire) {
             throw $this->createNotFoundException('Question non trouvée');
         }
 
-        $form = $this->createForm(QuestionnaireType::class, $questionnaire);
-        $form->handleRequest($request);
+        $existingQuestions = $this->repository->findByJobTitle((string) $questionnaire->getJobTitle());
+        $postedJobTitle = (string) $questionnaire->getJobTitle();
+        $rowsForView = array_map(static function (Questionnaire $item): array {
+            return [
+                'id' => (int) $item->getIdQuestionnaire(),
+                'text' => (string) $item->getQuestionText(),
+            ];
+        }, $existingQuestions);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($rowsForView === []) {
+            $rowsForView = [['id' => null, 'text' => '']];
+        }
+
+        if ($request->isMethod('POST')) {
+            $postedJobTitle = trim((string) $request->request->get('jobTitle', ''));
+            $questionRows = $request->request->all('questions');
+
+            $existingById = [];
+            foreach ($existingQuestions as $existing) {
+                $existingById[(int) $existing->getIdQuestionnaire()] = $existing;
+            }
+
+            $nextId = $this->getNextQuestionnaireId();
+            $keptIds = [];
+            $rowsForView = [];
+
             try {
-                $this->service->validateJobTitle($questionnaire->getJobTitle());
-                $this->service->validateQuestionText($questionnaire->getQuestionText());
-                $this->service->validateAnswerOptions($questionnaire->getAnswerOptions());
+                $this->service->validateJobTitle($postedJobTitle);
 
-                $this->service->updateTimestamp($questionnaire);
-                $this->addFlash('success', 'Question modifiée avec succès');
+                foreach ($questionRows as $row) {
+                    if (!is_array($row)) {
+                        continue;
+                    }
+
+                    $rawId = trim((string) ($row['id'] ?? ''));
+                    $text = trim((string) ($row['text'] ?? ''));
+                    $rowsForView[] = [
+                        'id' => $rawId !== '' ? (int) $rawId : null,
+                        'text' => $text,
+                    ];
+
+                    if ($text === '') {
+                        continue;
+                    }
+
+                    $this->service->validateQuestionText($text);
+
+                    if ($rawId !== '' && isset($existingById[(int) $rawId])) {
+                        $entity = $existingById[(int) $rawId];
+                        $entity->setJobTitle($postedJobTitle);
+                        $entity->setQuestionText($text);
+                        $entity->setUpdated_at(new \DateTime());
+                        $keptIds[(int) $rawId] = true;
+                        continue;
+                    }
+
+                    $newQuestion = $this->service->createQuestionnaire(
+                        $postedJobTitle,
+                        $text,
+                        '',
+                        ''
+                    );
+                    $newQuestion->setIdQuestionnaire($nextId++);
+                    $this->em->persist($newQuestion);
+                }
+
+                if ($keptIds === [] && $this->hasNoPostedNonEmptyQuestion($questionRows)) {
+                    throw new \InvalidArgumentException('Ajoutez au moins une question.');
+                }
+
+                foreach ($existingQuestions as $existing) {
+                    $existingId = (int) $existing->getIdQuestionnaire();
+                    if (!isset($keptIds[$existingId])) {
+                        $this->em->remove($existing);
+                    }
+                }
+
+                $this->em->flush();
+
+                $this->addFlash('success', 'Questionnaire modifié avec succès');
                 return $this->redirectToRoute('questionnaire_index');
             } catch (\InvalidArgumentException $e) {
                 $this->addFlash('error', 'Erreur: ' . $e->getMessage());
+                if ($rowsForView === []) {
+                    $rowsForView = [['id' => null, 'text' => '']];
+                }
             }
         }
 
         return $this->render('interview/questionnaire/edit.html.twig', [
-            'form' => $form,
             'questionnaire' => $questionnaire,
+            'jobTitle' => $postedJobTitle,
+            'questions' => $rowsForView,
         ]);
+    }
+
+    private function hasNoPostedNonEmptyQuestion(array $questionRows): bool
+    {
+        foreach ($questionRows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $text = trim((string) ($row['text'] ?? ''));
+            if ($text !== '') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -155,16 +284,19 @@ class QuestionnaireController extends AbstractController
     #[Route('/{id}/delete', name: 'delete', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function delete(int $id, Request $request): Response
     {
-        $questionnaire = $this->em->getRepository(Questionnaire::class)->find($id);
+        $questionnaire = $this->repository->find($id);
 
         if (!$questionnaire) {
             throw $this->createNotFoundException('Question non trouvée');
         }
 
         if ($this->isCsrfTokenValid('delete' . $questionnaire->getIdQuestionnaire(), $request->request->get('_token'))) {
-            $this->em->remove($questionnaire);
+            $allQuestions = $this->repository->findByJobTitle((string) $questionnaire->getJobTitle());
+            foreach ($allQuestions as $question) {
+                $this->em->remove($question);
+            }
             $this->em->flush();
-            $this->addFlash('success', 'Question supprimée avec succès');
+            $this->addFlash('success', 'Questionnaire supprimé avec succès');
         } else {
             $this->addFlash('error', 'Token CSRF invalide');
         }
