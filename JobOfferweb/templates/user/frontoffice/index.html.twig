@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Frontoffice - HireHive{% endblock %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <link rel="stylesheet" href="{{ asset('build/app.css') }}">
+{% endblock %}
+
+{# Main content injected into base layout #}
+{% block content %}
+  {% block frontoffice_content %}
+    <section class="frontoffice-hero">
+      <h2>Bienvenue à HireHive</h2>
+      <p>Trouvez l'offre d'emploi parfaite pour vous</p>
+    </section>
+  {% endblock %}
+{% endblock %}

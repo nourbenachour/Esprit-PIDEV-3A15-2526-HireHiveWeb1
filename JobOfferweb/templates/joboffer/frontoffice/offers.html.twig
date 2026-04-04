@@ -1,0 +1,173 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Offres d'emploi - HireHive{% endblock %}
+
+{% block content %}
+<style>
+.offers-page { max-width: 960px; margin: 0 auto; }
+.offers-header { margin-bottom: 20px; }
+.offers-title { margin: 0; font-size: 24px; font-weight: 800; color: #1f2937; }
+.offers-subtitle { margin: 4px 0 0; color: #6b7280; font-size: 15px; }
+.offers-filters {
+    display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+.offers-filters .fg { display: flex; flex-direction: column; gap: 4px; }
+.offers-filters label { font-size: 12px; font-weight: 700; color: #6b7280; }
+.offers-filters input, .offers-filters select {
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    color: #1f2937;
+    min-width: 180px;
+}
+.offers-filters input:focus, .offers-filters select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(124,58,237,0.15);
+}
+.offers-grid { display: flex; flex-direction: column; gap: 14px; }
+.offer-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px 20px;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.offer-card:hover {
+    box-shadow: 0 8px 24px rgba(124,58,237,0.10);
+    transform: translateY(-2px);
+}
+.offer-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.offer-card-title { margin: 0; font-size: 17px; font-weight: 800; color: #1f2937; }
+.offer-card-title a { color: inherit; text-decoration: none; }
+.offer-card-title a:hover { color: var(--accent); }
+.offer-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.offer-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #f3f0ff;
+    color: var(--accent);
+    border: 1px solid #e4ddff;
+}
+.offer-tag.location { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.offer-desc { margin: 10px 0 0; color: #4b5563; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.offer-skills { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-chip {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #ede9fe;
+    color: #5b21b6;
+}
+.offer-actions { margin-top: 12px; display: flex; gap: 8px; }
+.btn-apply {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.btn-apply:hover { background: var(--accent-dark); transform: translateY(-1px); }
+.btn-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    background: #f3f0ff;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    border: 1px solid #e4ddff;
+    transition: background 0.15s ease;
+}
+.btn-detail:hover { background: #ede9fe; }
+.offers-count { color: #6b7280; font-size: 13px; margin-top: 4px; }
+.no-offers { text-align: center; padding: 40px; color: #9ca3af; font-size: 15px; }
+</style>
+
+<div class="offers-page">
+    <div class="offers-header">
+        <h1 class="offers-title">Offres d'emploi</h1>
+        <p class="offers-subtitle">Trouvez l'opportunité qui correspond à votre profil</p>
+        <p class="offers-count">{{ offers|length }} offre{{ offers|length > 1 ? 's' : '' }} disponible{{ offers|length > 1 ? 's' : '' }}</p>
+    </div>
+
+    <form method="get" class="offers-filters">
+        <div class="fg" style="flex:1; min-width:200px;">
+            <label for="search-q">Recherche</label>
+            <input id="search-q" type="text" name="q" value="{{ filter_query }}" placeholder="Titre, description, lieu...">
+        </div>
+        <div class="fg">
+            <label for="search-ct">Type de contrat</label>
+            <select id="search-ct" name="contract_type">
+                <option value="">Tous</option>
+                <option value="CDI" {{ filter_contract_type == 'CDI' ? 'selected' : '' }}>CDI</option>
+                <option value="CDD" {{ filter_contract_type == 'CDD' ? 'selected' : '' }}>CDD</option>
+                <option value="Stage" {{ filter_contract_type == 'Stage' ? 'selected' : '' }}>Stage</option>
+                <option value="Freelance" {{ filter_contract_type == 'Freelance' ? 'selected' : '' }}>Freelance</option>
+            </select>
+        </div>
+        <div class="fg" style="display:flex; flex-direction:row; gap:8px; align-items:flex-end;">
+            <button type="submit" class="btn-apply">Rechercher</button>
+            <a href="{{ path('app_joboffer_front_list') }}" class="btn-detail">Réinitialiser</a>
+        </div>
+    </form>
+
+    <div class="offers-grid">
+        {% for o in offers %}
+        <div class="offer-card">
+            <div class="offer-card-top">
+                <div>
+                    <h3 class="offer-card-title"><a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}">{{ o.title }}</a></h3>
+                    <div class="offer-meta">
+                        <span class="offer-tag location">📍 {{ o.location }}</span>
+                        <span class="offer-tag">{{ o.contract_type }}</span>
+                        {% if o.created_at is defined and o.created_at %}
+                            <span class="offer-tag" style="background:#f0f9ff; color:#0369a1; border-color:#bae6fd;">{{ o.created_at|date('d/m/Y') }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <p class="offer-desc">{{ o.description }}</p>
+            {% if o.skills is defined and o.skills %}
+            <div class="offer-skills">
+                {% for skill in o.skills|split(',') %}
+                    <span class="skill-chip">{{ skill|trim }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="offer-actions">
+                <a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}" class="btn-detail">Voir détail</a>
+                <a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}#apply" class="btn-apply">Postuler →</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="no-offers">
+            <p>Aucune offre disponible pour le moment.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

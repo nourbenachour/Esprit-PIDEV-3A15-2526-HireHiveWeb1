@@ -1,0 +1,23 @@
+<aside class="dashboard-sidebar">
+    <div class="sidebar-logo">
+        <span class="logo-text">Navigation</span>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Navigation</div>
+        <a href="{{ path('app_backoffice') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice' %}sidebar-btn-active{% endif %}">Accueil</a>
+        <a href="{{ path('app_backoffice_users') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_users' %}sidebar-btn-active{% endif %}">Utilisateurs</a>
+        <a href="{{ path('app_backoffice_formations') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_formations' %}sidebar-btn-active{% endif %}">Formations</a>
+        <a href="{{ path('app_backoffice_posts') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_posts' %}sidebar-btn-active{% endif %}">Postes</a>
+        <a href="{{ path('app_backoffice_reclamations') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_reclamations' %}sidebar-btn-active{% endif %}">Réclamations</a>
+        <a href="{{ path('app_backoffice_interviews') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_interviews' %}sidebar-btn-active{% endif %}">Interviews</a>
+        <a href="{{ path('app_backoffice_offres') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_offres' %}sidebar-btn-active{% endif %}">Offres d'emploi</a>
+        <a href="{{ path('app_joboffer_back_list') }}" class="sidebar-btn {% if app.request.attributes.get('_route') starts with 'app_joboffer_back' %}sidebar-btn-active{% endif %}">Offres (CRUD)</a>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-label">Paramètres</div>
+        <a href="{{ path('app_backoffice_parametres') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_parametres' %}sidebar-btn-active{% endif %}">Paramètres</a>
+        <a href="{{ path('app_backoffice_stats') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_stats' %}sidebar-btn-active{% endif %}">Statistiques</a>
+    </div>
+</aside>

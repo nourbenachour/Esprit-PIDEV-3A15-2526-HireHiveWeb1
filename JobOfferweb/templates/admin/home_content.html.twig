@@ -1,0 +1,169 @@
+{% block backoffice_content %}
+<style>
+    .home-shell { display: flex; flex-direction: column; gap: 12px; }
+    .home-head h1 { margin: 0; font-size: 20px; color: var(--text); }
+    .home-head p { margin: 2px 0 0; color: var(--muted); }
+    .home-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+    .card-simple {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+    }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 8px; }
+    .kpi-card { border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: #141a2a; }
+    .kpi-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .3px; }
+    .kpi-value { font-size: 22px; font-weight: 800; color: var(--text); margin: 2px 0; }
+    .kpi-trend { font-size: 12px; color: var(--accent-2); }
+    .section-title { margin: 0 0 6px; font-size: 16px; color: var(--text); }
+    .list { display: flex; flex-direction: column; gap: 6px; }
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: #141a2a; }
+    .item-title { font-weight: 700; color: var(--text); }
+    .item-meta { color: var(--muted); font-size: 13px; }
+    .trend-bar { height: 10px; background: #0f172a; border:1px solid var(--border); border-radius: 999px; overflow: hidden; }
+    .trend-fill { height: 100%; background: var(--accent); width: var(--progress, 0%); }
+    .trend-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    .chatbot-card { display: flex; flex-direction: column; gap: 8px; }
+    .chatbot-input { width: 100%; padding: 9px 10px; border:1px solid var(--border); border-radius:6px; }
+    .chatbot-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chatbot-buttons button { padding: 8px 10px; border:1px solid var(--border); background:#0f172a; border-radius:6px; cursor:pointer; color: var(--text); }
+    .chatbot-reply { border:1px solid var(--border); border-radius:6px; padding:10px; background:#141a2a; min-height:60px; color: var(--text); }
+    @media (max-width: 960px) { .home-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="home-shell">
+    <div class="home-head">
+        <h1>Tableau de bord</h1>
+        <p>Vue d'ensemble plateforme recrutement & formations</p>
+    </div>
+
+    <div class="home-grid">
+        <div class="home-left">
+            <div class="card-simple">
+                <div class="section-title">KPI</div>
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Utilisateurs</div>
+                        <div class="kpi-value">{{ total_users|default(17) }}</div>
+                        <div class="kpi-trend">+12%</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Candidats</div>
+                        <div class="kpi-value">{{ total_candidates|default(10) }}</div>
+                        <div class="kpi-trend">+8%</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Offres</div>
+                        <div class="kpi-value">{{ total_offers|default(48) }}</div>
+                        <div class="kpi-trend">Stable</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Entretiens</div>
+                        <div class="kpi-value">{{ total_interviews|default(19) }}</div>
+                        <div class="kpi-trend">+24%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-simple">
+                <div class="section-title">Dernières affiches / postes</div>
+                <div class="list">
+                    {% for post in posts|default([
+                        {title: 'Dev. Java Senior', ago: 'Il y a 2j'},
+                        {title: 'Formation Python avancée', ago: 'Il y a 5j'},
+                        {title: 'Admin Oracle / DBA', ago: 'Il y a 1 sem.'},
+                        {title: 'Full Stack Java + Angular', ago: 'Il y a 1 sem.'}
+                    ]) %}
+                        <div class="list-item">
+                            <div class="item-title">{{ post.title }}</div>
+                            <div class="item-meta">{{ post.ago }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card-simple">
+                <div class="section-title">Tendances</div>
+                <div class="trend-bar">
+                    <div class="trend-fill" style="--progress: 68%"></div>
+                </div>
+                <div class="trend-row">
+                    <span class="item-title">Conversion candidatures → entretiens</span>
+                    <span class="item-meta">68%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-right">
+            <div class="card-simple chatbot-card">
+                <div class="section-title">Assistant (Chatbot)</div>
+                <input type="text" id="chatbotInput" class="chatbot-input" placeholder="Entrez le nom ou l'URL de l'entreprise">
+                <div class="chatbot-buttons">
+                    <button id="qWebsite">Vérifier le site web</button>
+                    <button id="qApi">Rechercher INSEE</button>
+                    <button id="qRestart">Recommencer</button>
+                </div>
+                <div id="chatbotReply" class="chatbot-reply">[18:56:08] BOT: Bonjour, je peux tester le site web (HTTP) et interroger l'API INSEE (open data). Saisissez le nom ou l'URL, puis utilisez les boutons.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatbotInput = document.getElementById('chatbotInput');
+        const qWebsite = document.getElementById('qWebsite');
+        const qApi = document.getElementById('qApi');
+        const qRestart = document.getElementById('qRestart');
+        const chatbotReply = document.getElementById('chatbotReply');
+
+        qWebsite.addEventListener('click', function() {
+            const url = chatbotInput.value.trim();
+            if (!url) {
+                chatbotReply.textContent = 'Merci d’indiquer une URL ou un nom de domaine.';
+                return;
+            }
+
+            fetch('{{ path("app_backoffice_chatbot_ping") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            })
+            .then(r => r.json())
+            .then(data => {
+                chatbotReply.textContent = data.message;
+            })
+            .catch(e => chatbotReply.textContent = 'Erreur: ' + e.message);
+        });
+
+        qApi.addEventListener('click', function() {
+            const query = chatbotInput.value.trim();
+            if (!query) {
+                chatbotReply.textContent = 'Merci d’indiquer le nom de l’entreprise.';
+                return;
+            }
+
+            fetch('{{ path("app_backoffice_chatbot_insee") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    const r = data.result;
+                    chatbotReply.textContent = `${r.denomination} (SIREN: ${r.siren}) - ${r.etat}`;
+                } else {
+                    chatbotReply.textContent = data.message;
+                }
+            })
+            .catch(e => chatbotReply.textContent = 'Erreur: ' + e.message);
+        });
+
+        qRestart.addEventListener('click', function() {
+            chatbotInput.value = '';
+            chatbotReply.textContent = '[18:56:08] BOT: Bonjour, je peux tester le site web (HTTP) et interroger l’API INSEE (open data). Saisissez le nom ou l’URL, puis utilisez les boutons.';
+        });
+    });
+</script>
+{% endblock %}

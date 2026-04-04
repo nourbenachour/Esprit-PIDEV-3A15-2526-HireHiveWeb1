@@ -1,0 +1,213 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ offre.title }} - HireHive{% endblock %}
+
+{% block content %}
+<style>
+.detail-page { max-width: 820px; margin: 0 auto; }
+.detail-back { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 700; font-size: 14px; text-decoration: none; margin-bottom: 16px; }
+.detail-back:hover { text-decoration: underline; }
+.detail-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 28px 30px;
+    margin-bottom: 20px;
+}
+.detail-title { margin: 0 0 6px; font-size: 24px; font-weight: 800; color: #1f2937; }
+.detail-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.detail-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    background: #f3f0ff;
+    color: var(--accent);
+    border: 1px solid #e4ddff;
+}
+.detail-tag.loc { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.detail-tag.date { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+.detail-section-title { font-size: 15px; font-weight: 800; color: #374151; margin: 18px 0 8px; }
+.detail-desc { color: #4b5563; font-size: 15px; line-height: 1.7; white-space: pre-line; }
+.detail-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-chip {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #ede9fe;
+    color: #5b21b6;
+}
+.skill-chip.soft { background: #fef3c7; color: #92400e; }
+.apply-section {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-top: 20px;
+}
+.apply-title { margin: 0 0 14px; font-size: 18px; font-weight: 800; color: #1f2937; }
+.apply-form .fg { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+.apply-form label { font-size: 13px; font-weight: 700; color: #374151; }
+.apply-form textarea, .apply-form input[type="file"] {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    color: #1f2937;
+    font-family: inherit;
+}
+.apply-form textarea { min-height: 120px; resize: vertical; }
+.apply-form textarea:focus, .apply-form input[type="file"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(124,58,237,0.15);
+}
+.field-error { border-color: #ef4444 !important; }
+.error-msg { color: #ef4444; font-size: 12px; min-height: 16px; }
+.applied-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: #ecfdf5;
+    color: #065f46;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1px solid #a7f3d0;
+}
+.btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.btn-submit:hover { background: var(--accent-dark); transform: translateY(-1px); }
+</style>
+
+<div class="detail-page">
+    <a href="{{ path('app_joboffer_front_list') }}" class="detail-back">← Retour aux offres</a>
+
+    {% for message in app.flashes('success') %}
+        <div class="flash flash-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="flash flash-error">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('warning') %}
+        <div class="flash flash-warning">{{ message }}</div>
+    {% endfor %}
+
+    <div class="detail-card">
+        <h1 class="detail-title">{{ offre.title }}</h1>
+        <div class="detail-meta">
+            <span class="detail-tag loc">📍 {{ offre.location }}</span>
+            <span class="detail-tag">{{ offre.contract_type }}</span>
+            <span class="detail-tag" style="background:#0d3320; color:#4ade80; border-color:#166534;">{{ offre.status }}</span>
+            {% if offre.created_at is defined and offre.created_at %}
+                <span class="detail-tag date">{{ offre.created_at|date('d/m/Y') }}</span>
+            {% endif %}
+        </div>
+
+        <h4 class="detail-section-title">Description</h4>
+        <p class="detail-desc">{{ offre.description }}</p>
+
+        {% if offre.skills is defined and offre.skills %}
+        <h4 class="detail-section-title">Compétences requises</h4>
+        <div class="detail-skills">
+            {% for skill in offre.skills|split(',') %}
+                <span class="skill-chip">{{ skill|trim }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if offre.soft_skills is defined and offre.soft_skills %}
+        <h4 class="detail-section-title">Soft Skills</h4>
+        <div class="detail-skills">
+            {% for skill in offre.soft_skills|split(',') %}
+                <span class="skill-chip soft">{{ skill|trim }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="apply-section" id="apply">
+        {% if has_applied %}
+            <div class="applied-badge">✓ Vous avez déjà postulé à cette offre</div>
+        {% elseif offre.status != 'OPEN' %}
+            <p style="color:#6b7280; font-weight:700;">Cette offre n'accepte plus de candidatures.</p>
+        {% else %}
+            <h3 class="apply-title">Postuler à cette offre</h3>
+            <form method="post" action="{{ path('app_joboffer_front_apply', {id: offre.id_job_offer}) }}" enctype="multipart/form-data" class="apply-form" id="applyForm" novalidate>
+                <div class="fg">
+                    <label for="apply-lettre">Lettre de motivation *</label>
+                    <textarea id="apply-lettre" name="lettre" required minlength="20" placeholder="Décrivez votre motivation (min 20 caractères)..."></textarea>
+                    <span class="error-msg" id="err-lettre"></span>
+                </div>
+                <div class="fg">
+                    <label for="apply-cv">CV (PDF uniquement) *</label>
+                    <input type="file" id="apply-cv" name="cv_file" accept="application/pdf" required>
+                    <span class="error-msg" id="err-cv"></span>
+                </div>
+                <button type="submit" class="btn-submit" id="btn-apply-submit">Envoyer ma candidature →</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('applyForm');
+    if (!form) return;
+
+    const lettreEl = document.getElementById('apply-lettre');
+    const cvEl = document.getElementById('apply-cv');
+
+    function validateLettre() {
+        const val = lettreEl.value.trim();
+        const err = document.getElementById('err-lettre');
+        let msg = '';
+        if (val.length < 20) msg = 'La lettre de motivation est obligatoire (min 20 caractères).';
+        else if (!/\p{L}/u.test(val)) msg = 'La lettre doit contenir au moins une lettre.';
+        err.textContent = msg;
+        lettreEl.classList.toggle('field-error', msg !== '');
+        return msg === '';
+    }
+
+    function validateCv() {
+        const err = document.getElementById('err-cv');
+        let msg = '';
+        if (!cvEl.files || cvEl.files.length === 0) {
+            msg = 'Le CV est obligatoire (fichier PDF).';
+        } else if (cvEl.files[0].type !== 'application/pdf') {
+            msg = 'Le CV doit être au format PDF.';
+        }
+        err.textContent = msg;
+        cvEl.classList.toggle('field-error', msg !== '');
+        return msg === '';
+    }
+
+    lettreEl.addEventListener('input', validateLettre);
+    lettreEl.addEventListener('blur', validateLettre);
+    cvEl.addEventListener('change', validateCv);
+
+    form.addEventListener('submit', function(e) {
+        const a = validateLettre();
+        const b = validateCv();
+        if (!a || !b) e.preventDefault();
+    });
+});
+</script>
+{% endblock %}

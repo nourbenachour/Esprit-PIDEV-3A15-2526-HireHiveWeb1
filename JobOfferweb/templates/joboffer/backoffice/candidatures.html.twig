@@ -1,0 +1,127 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Candidatures - {{ offre.title }} - Backoffice{% endblock %}
+
+{% block backoffice_content %}
+<style>
+    .cand-page { display: flex; flex-direction: column; gap: 12px; }
+    .cand-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .cand-title { margin: 0; font-size: 18px; color: var(--text); }
+    .cand-subtitle { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+    .cand-table-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .table-simple { width: 100%; border-collapse: collapse; color: var(--text); }
+    .table-simple th, .table-simple td {
+        padding: 11px 10px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        text-align: left;
+    }
+    .table-simple th {
+        background: #1a1f2e;
+        color: var(--text);
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .table-simple tr:hover td { background: #111e32; }
+    .badge-app-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid var(--border);
+    }
+    .badge-app-status.pending { background: #422006; color: #fcd34d; border-color: #92400e; }
+    .badge-app-status.accepted { background: #0d3320; color: #4ade80; border-color: #166534; }
+    .badge-app-status.rejected { background: #3b1219; color: #fb7185; border-color: #9f1239; }
+    .status-actions { display: flex; gap: 6px; }
+    .status-actions form { display: inline; }
+    .btn-accept { background: #166534; color: #4ade80; border: 1px solid #22c55e; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-accept:hover { background: #15803d; }
+    .btn-reject { background: #9f1239; color: #fda4af; border: 1px solid #e11d48; border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-reject:hover { background: #be123c; }
+    .lettre-cell { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+
+<div class="cand-page">
+    <div class="cand-header">
+        <div>
+            <h2 class="cand-title">Candidatures pour : {{ offre.title }}</h2>
+            <p class="cand-subtitle">{{ offre.location }} • {{ offre.contract_type }}</p>
+            <small class="text-muted">{{ applications|length }} candidature{{ applications|length > 1 ? 's' : '' }}</small>
+        </div>
+        <div style="margin-left:auto;">
+            <a href="{{ path('app_joboffer_back_list') }}" class="btn btn-ghost">← Retour aux offres</a>
+        </div>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div style="background:#0d3320; color:#4ade80; border:1px solid #166534; border-radius:8px; padding:10px; font-size:13px;">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div style="background:#3b1219; color:#fb7185; border:1px solid #9f1239; border-radius:8px; padding:10px; font-size:13px;">{{ message }}</div>
+    {% endfor %}
+
+    <div class="cand-table-card">
+        <table class="table-simple">
+            <thead>
+                <tr>
+                    <th>Candidat</th>
+                    <th>Email</th>
+                    <th>Lettre de motivation</th>
+                    <th>CV</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th style="width: 180px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for a in applications %}
+                {% set status_class = a.status|lower == 'accepted' ? 'accepted' : (a.status|lower == 'rejected' ? 'rejected' : 'pending') %}
+                <tr>
+                    <td><strong>{{ a.first_name|default('') }} {{ a.last_name|default('') }}</strong></td>
+                    <td>{{ a.email|default('—') }}</td>
+                    <td class="lettre-cell" title="{{ a.lettre|default('') }}">{{ a.lettre|default('—') }}</td>
+                    <td>
+                        {% if a.cv_file_path is defined and a.cv_file_path %}
+                            <a href="{{ a.cv_file_path }}" target="_blank" class="btn btn-ghost" style="font-size:12px;">📄 Voir CV</a>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ a.application_date is defined and a.application_date ? a.application_date|date('d-m-Y') : '' }}</td>
+                    <td><span class="badge-app-status {{ status_class }}">{{ a.status }}</span></td>
+                    <td>
+                        <div class="status-actions">
+                            {% if a.status != 'ACCEPTED' %}
+                                <form method="post" action="{{ path('app_joboffer_back_candidature_status', {id: a.id_condidature}) }}">
+                                    <input type="hidden" name="status" value="ACCEPTED">
+                                    <button type="submit" class="btn-accept">✓ Accepter</button>
+                                </form>
+                            {% endif %}
+                            {% if a.status != 'REJECTED' %}
+                                <form method="post" action="{{ path('app_joboffer_back_candidature_status', {id: a.id_condidature}) }}">
+                                    <input type="hidden" name="status" value="REJECTED">
+                                    <button type="submit" class="btn-reject">✗ Refuser</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">Aucune candidature pour cette offre.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

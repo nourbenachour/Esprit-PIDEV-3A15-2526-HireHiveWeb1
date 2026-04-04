@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Candidatures - HireHive{% endblock %}
+
+{% block content %}
+<style>
+.myapps-page { max-width: 960px; margin: 0 auto; }
+.myapps-header { margin-bottom: 20px; }
+.myapps-title { margin: 0; font-size: 24px; font-weight: 800; color: #1f2937; }
+.myapps-subtitle { margin: 4px 0 0; color: #6b7280; font-size: 15px; }
+.myapps-count { color: #6b7280; font-size: 13px; margin-top: 4px; }
+.apps-list { display: flex; flex-direction: column; gap: 12px; }
+.app-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.app-card:hover {
+    box-shadow: 0 6px 20px rgba(124,58,237,0.08);
+    transform: translateY(-1px);
+}
+.app-info { flex: 1; min-width: 200px; }
+.app-offer-title { margin: 0; font-size: 16px; font-weight: 800; color: #1f2937; }
+.app-offer-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.app-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #f3f0ff;
+    color: var(--accent);
+    border: 1px solid #e4ddff;
+}
+.app-tag.loc { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.app-tag.date { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+.app-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+.app-status.pending { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.app-status.accepted { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.app-status.rejected { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.app-lettre {
+    margin-top: 8px;
+    color: #6b7280;
+    font-size: 13px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.app-cv-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #f3f0ff;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 12px;
+    text-decoration: none;
+    border: 1px solid #e4ddff;
+}
+.app-cv-link:hover { background: #ede9fe; }
+.no-apps { text-align: center; padding: 40px; color: #9ca3af; font-size: 15px; }
+.no-apps a { color: var(--accent); font-weight: 700; }
+</style>
+
+<div class="myapps-page">
+    <div class="myapps-header">
+        <h1 class="myapps-title">Mes Candidatures</h1>
+        <p class="myapps-subtitle">Suivez le statut de vos candidatures</p>
+        <p class="myapps-count">{{ applications|length }} candidature{{ applications|length > 1 ? 's' : '' }}</p>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="flash flash-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="flash flash-error">{{ message }}</div>
+    {% endfor %}
+
+    <div class="apps-list">
+        {% for a in applications %}
+            {% set status_class = a.status|lower == 'accepted' ? 'accepted' : (a.status|lower == 'rejected' ? 'rejected' : 'pending') %}
+            <div class="app-card">
+                <div class="app-info">
+                    <h3 class="app-offer-title">{{ a.offer_title|default('Offre supprimée') }}</h3>
+                    <div class="app-offer-meta">
+                        {% if a.location is defined and a.location %}
+                            <span class="app-tag loc">📍 {{ a.location }}</span>
+                        {% endif %}
+                        {% if a.contract_type is defined and a.contract_type %}
+                            <span class="app-tag">{{ a.contract_type }}</span>
+                        {% endif %}
+                        {% if a.application_date is defined and a.application_date %}
+                            <span class="app-tag date">{{ a.application_date|date('d/m/Y') }}</span>
+                        {% endif %}
+                    </div>
+                    {% if a.lettre is defined and a.lettre %}
+                        <p class="app-lettre">{{ a.lettre }}</p>
+                    {% endif %}
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                    <span class="app-status {{ status_class }}">{{ a.status }}</span>
+                    {% if a.cv_file_path is defined and a.cv_file_path %}
+                        <a href="{{ a.cv_file_path }}" target="_blank" class="app-cv-link">📄 Mon CV</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="no-apps">
+                <p>Vous n'avez pas encore postulé.</p>
+                <p><a href="{{ path('app_joboffer_front_list') }}">Voir les offres disponibles →</a></p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

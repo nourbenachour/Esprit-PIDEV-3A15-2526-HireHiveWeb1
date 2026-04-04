@@ -1,0 +1,156 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Offres d'emploi - Backoffice{% endblock %}
+
+{% block backoffice_content %}
+<style>
+    .offer-page { display: flex; flex-direction: column; gap: 12px; }
+    .offer-page-header { display: flex; align-items: center; gap: 12px; }
+    .offer-page-title { margin: 0; font-size: 18px; color: var(--text); }
+    .offer-page-subtitle { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+    .offer-table-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .table-simple { width: 100%; border-collapse: collapse; color: var(--text); }
+    .table-simple th, .table-simple td {
+        padding: 11px 10px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        text-align: left;
+    }
+    .table-simple th {
+        background: #1a1f2e;
+        color: var(--text);
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+    .table-simple tr:hover td { background: #111e32; }
+    .badge-offer-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid var(--border);
+        background: #1a1f2e;
+        color: var(--text);
+    }
+    .badge-offer-status.open { background: #0d3320; color: #4ade80; border-color: #166534; }
+    .badge-offer-status.closed { background: #3b1219; color: #fb7185; border-color: #9f1239; }
+    .badge-offer-status.draft { background: #1a1f2e; color: var(--muted); border-color: var(--border); }
+    .badge-contract {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid var(--border);
+        background: #162032;
+        color: var(--accent-2);
+    }
+    .actions-inline { display: flex; gap: 8px; align-items: center; }
+    .form-select, .form-input {
+        background: #0f172a;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 10px;
+        min-width: 150px;
+    }
+    .form-label { display: block; margin-bottom: 4px; color: var(--muted); font-size: 12px; }
+    .desc-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .skills-cell { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+
+<div class="offer-page">
+    <div class="offer-page-header">
+        <div>
+            <h2 class="offer-page-title">Offres d'emploi</h2>
+            <p class="offer-page-subtitle">Gestion des offres et candidatures</p>
+            <small class="text-muted">{{ offers|length }} résultat{{ offers|length > 1 ? 's' : '' }}</small>
+        </div>
+        <div style="margin-left:auto;">
+            <a href="{{ path('app_joboffer_back_new') }}" class="btn btn-primary">Ajouter une offre</a>
+        </div>
+    </div>
+
+    <form method="get" class="filters-row" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+        <div style="min-width:220px;">
+            <label class="form-label" for="filter-q">Recherche</label>
+            <input id="filter-q" class="form-input" type="text" name="q" value="{{ filter_query }}" placeholder="Titre, description, lieu...">
+        </div>
+        <div>
+            <label class="form-label" for="filter-status">Statut</label>
+            <select name="status" id="filter-status" class="form-select">
+                <option value="">Tous</option>
+                <option value="OPEN" {{ filter_status == 'OPEN' ? 'selected' : '' }}>OPEN</option>
+                <option value="CLOSED" {{ filter_status == 'CLOSED' ? 'selected' : '' }}>CLOSED</option>
+                <option value="DRAFT" {{ filter_status == 'DRAFT' ? 'selected' : '' }}>DRAFT</option>
+            </select>
+        </div>
+        <div>
+            <label class="form-label" for="filter-ct">Type de contrat</label>
+            <select name="contract_type" id="filter-ct" class="form-select">
+                <option value="">Tous</option>
+                <option value="CDI" {{ filter_contract_type == 'CDI' ? 'selected' : '' }}>CDI</option>
+                <option value="CDD" {{ filter_contract_type == 'CDD' ? 'selected' : '' }}>CDD</option>
+                <option value="Stage" {{ filter_contract_type == 'Stage' ? 'selected' : '' }}>Stage</option>
+                <option value="Freelance" {{ filter_contract_type == 'Freelance' ? 'selected' : '' }}>Freelance</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button type="submit" class="btn btn-primary">Filtrer</button>
+            <a class="btn btn-ghost" href="{{ path('app_joboffer_back_list') }}">Réinitialiser</a>
+        </div>
+    </form>
+
+    <div class="offer-table-card">
+        <table class="table-simple">
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Lieu</th>
+                    <th>Contrat</th>
+                    <th>Statut</th>
+                    <th>Compétences</th>
+                    <th>Créé le</th>
+                    <th style="width: 200px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for o in offers %}
+                {% set status_class = o.status|lower == 'open' ? 'open' : (o.status|lower == 'closed' ? 'closed' : 'draft') %}
+                <tr>
+                    <td><strong>{{ o.title }}</strong></td>
+                    <td>{{ o.location }}</td>
+                    <td><span class="badge-contract">{{ o.contract_type }}</span></td>
+                    <td><span class="badge-offer-status {{ status_class }}">{{ o.status }}</span></td>
+                    <td class="skills-cell" title="{{ o.skills }}">{{ o.skills }}</td>
+                    <td>{{ o.created_at is defined and o.created_at ? o.created_at|date('d-m-Y') : '' }}</td>
+                    <td>
+                        <div class="actions-inline">
+                            <a class="btn btn-ghost" href="{{ path('app_joboffer_back_edit', {id: o.id_job_offer}) }}">Modifier</a>
+                            <a class="btn btn-ghost" href="{{ path('app_joboffer_back_candidatures', {id: o.id_job_offer}) }}">Candidatures</a>
+                            <form method="post" action="{{ path('app_joboffer_back_delete', {id: o.id_job_offer}) }}" style="display:inline" onsubmit="return confirm('Supprimer cette offre ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_offre_' ~ o.id_job_offer) }}">
+                                <button type="submit" class="btn btn-ghost" style="color:#fb7185;">Supprimer</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7" style="text-align:center; color:var(--muted); padding:16px;">Aucune offre ne correspond à ces filtres.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

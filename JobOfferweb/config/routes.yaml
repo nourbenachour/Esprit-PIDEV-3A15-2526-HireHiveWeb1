@@ -1,0 +1,75 @@
+controllers:
+    resource: ../src/Controller/
+    type: attribute
+    exclude: ../src/Controller/User/BackofficeController.php
+
+# Backoffice routes (explicit to ensure stable names)
+app_backoffice:
+    path: /backoffice
+    controller: App\Controller\User\BackofficeController::index
+    methods: [GET]
+
+app_backoffice_chatbot_ping:
+    path: /backoffice/chatbot/ping
+    controller: App\Controller\User\BackofficeController::pingWebsite
+    methods: [POST]
+
+app_backoffice_chatbot_insee:
+    path: /backoffice/chatbot/insee
+    controller: App\Controller\User\BackofficeController::searchInsee
+    methods: [POST]
+
+app_backoffice_users:
+    path: /backoffice/users
+    controller: App\Controller\User\BackofficeController::users
+    methods: [GET]
+
+app_backoffice_formations:
+    path: /backoffice/formations
+    controller: App\Controller\User\BackofficeController::formations
+    methods: [GET]
+
+app_backoffice_posts:
+    path: /backoffice/posts
+    controller: App\Controller\User\BackofficeController::postsSection
+    methods: [GET]
+
+app_backoffice_reclamations:
+    path: /backoffice/reclamations
+    controller: App\Controller\User\BackofficeController::reclamations
+    methods: [GET]
+
+app_backoffice_interviews:
+    path: /backoffice/interviews
+    controller: App\Controller\User\BackofficeController::interviews
+    methods: [GET]
+
+app_backoffice_offres:
+    path: /backoffice/offres
+    controller: App\Controller\User\BackofficeController::offres
+    methods: [GET]
+
+app_backoffice_parametres:
+    path: /backoffice/parametres
+    controller: App\Controller\User\BackofficeController::parametres
+    methods: [GET]
+
+app_backoffice_stats:
+    path: /backoffice/stats
+    controller: App\Controller\User\BackofficeController::stats
+    methods: [GET]
+
+app_backoffice_users_new:
+    path: /backoffice/users/new
+    controller: App\Controller\User\BackofficeController::newUser
+    methods: [GET, POST]
+
+app_backoffice_users_edit:
+    path: /backoffice/users/{id}/edit
+    controller: App\Controller\User\BackofficeController::editUser
+    methods: [GET, POST]
+
+app_backoffice_users_delete:
+    path: /backoffice/users/{id}
+    controller: App\Controller\User\BackofficeController::deleteUser
+    methods: [POST]
