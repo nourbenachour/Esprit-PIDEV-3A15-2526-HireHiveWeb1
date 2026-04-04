@@ -240,7 +240,7 @@
 
 .bo-toolbar {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 220px;
+    grid-template-columns: minmax(0, 1fr) 220px auto;
     gap: 12px;
     padding: 14px 16px;
 }
@@ -262,6 +262,36 @@
     outline: none;
     border-color: #8b5cf6;
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.14);
+}
+
+.bo-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bo-toolbar-btn,
+.bo-toolbar-link {
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid #7c3aed;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bo-toolbar-btn {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: #fff;
+}
+
+.bo-toolbar-link {
+    border-color: #364152;
+    color: #cbd5e1;
+    background: #121720;
 }
 
 .bo-sort-line {
@@ -838,23 +868,30 @@
                 <div class="bo-sort-line"></div>
             </div>
 
-            <section class="bo-composer bo-toolbar">
+            <form method="get" action="{{ path('app_backoffice_posts_list') }}" class="bo-composer bo-toolbar">
                 <input
                     type="search"
-                    id="bo-post-search"
+                    name="q"
                     class="bo-search-input"
-                    placeholder="Rechercher par titre de post..."
+                    placeholder="Rechercher par titre ou contenu..."
                     aria-label="Rechercher un post"
+                    value="{{ searchTerm|default('') }}"
                 >
-                <select id="bo-post-sort" class="bo-sort-select" aria-label="Trier les posts">
-                    <option value="newest">Plus recent</option>
-                    <option value="oldest">Plus ancien</option>
-                    <option value="title-asc">Titre A a Z</option>
-                    <option value="title-desc">Titre Z a A</option>
-                    <option value="comments-desc">Commentaires</option>
-                    <option value="reactions-desc">Reactions</option>
+                <select name="sort" class="bo-sort-select" aria-label="Trier les posts">
+                    <option value="newest" {{ currentSort == 'newest' ? 'selected' : '' }}>Plus recent</option>
+                    <option value="oldest" {{ currentSort == 'oldest' ? 'selected' : '' }}>Plus ancien</option>
+                    <option value="title-asc" {{ currentSort == 'title-asc' ? 'selected' : '' }}>Titre A a Z</option>
+                    <option value="title-desc" {{ currentSort == 'title-desc' ? 'selected' : '' }}>Titre Z a A</option>
+                    <option value="comments-desc" {{ currentSort == 'comments-desc' ? 'selected' : '' }}>Commentaires</option>
+                    <option value="reactions-desc" {{ currentSort == 'reactions-desc' ? 'selected' : '' }}>Reactions</option>
                 </select>
-            </section>
+                <div class="bo-toolbar-actions">
+                    <button type="submit" class="bo-toolbar-btn">Rechercher</button>
+                    {% if searchTerm or currentSort != 'newest' %}
+                        <a href="{{ path('app_backoffice_posts_list') }}" class="bo-toolbar-link">Reinitialiser</a>
+                    {% endif %}
+                </div>
+            </form>
 
             {% for post in posts %}
                 {% set author = post.id_user %}
@@ -870,10 +907,6 @@
                     class="bo-post"
                     id="post-{{ post.idPost }}"
                     data-post-id="{{ post.idPost }}"
-                    data-title="{{ post.title|lower }}"
-                    data-date="{{ post.createdAt|date('U') }}"
-                    data-comments="{{ post.comments|length }}"
-                    data-reactions="{{ totalPostReactions }}"
                 >
                     <div class="bo-post-header">
                         <div class="bo-post-avatar">{{ authorInitials|upper }}</div>
@@ -1016,7 +1049,9 @@
                     </div>
                 </article>
             {% else %}
-                <section class="bo-panel bo-empty">Aucun post pour le moment.</section>
+                <section class="bo-panel bo-empty">
+                    {{ searchTerm ? 'Aucun post ne correspond a votre recherche.' : 'Aucun post pour le moment.' }}
+                </section>
             {% endfor %}
         </main>
     </div>
@@ -1178,7 +1213,6 @@ async function submitDeleteForm(form) {
         }
 
         ensurePostsEmptyState();
-        applyPostFilters();
     }
 
     if (deleteKind === 'comment') {
@@ -1196,7 +1230,6 @@ async function submitDeleteForm(form) {
             ensureEmptyCommentsState(postEl);
         }
 
-        applyPostFilters();
     }
 
     showTransientFlash(data.message || 'Element supprime.', 'success');
@@ -1345,7 +1378,6 @@ document.querySelectorAll('.js-reaction-form').forEach(function (form) {
         postEl.querySelector('[data-reaction-count="dislike"]').innerHTML = '<i class="bi bi-hand-thumbs-down-fill" style="color:#fbbf24;"></i> ' + data.counts.dislike;
         postEl.dataset.reactions = String((data.counts.like || 0) + (data.counts.love || 0) + (data.counts.dislike || 0));
         closeOpenMenus();
-        applyPostFilters();
     });
 });
 
@@ -1384,53 +1416,6 @@ function focusCommentComposer(postId) {
             textarea.setSelectionRange(end, end);
         }
     }, 140);
-}
-
-function applyPostFilters() {
-    const searchInput = document.getElementById('bo-post-search');
-    const sortSelect = document.getElementById('bo-post-sort');
-    const posts = Array.from(document.querySelectorAll('.bo-post[data-post-id]'));
-    const query = (searchInput?.value || '').trim().toLowerCase();
-    const sort = sortSelect?.value || 'newest';
-
-    posts.forEach(function (post) {
-        const title = post.getAttribute('data-title') || '';
-        const visible = query === '' || title.includes(query);
-        post.classList.toggle('is-hidden', !visible);
-    });
-
-    const visiblePosts = posts.filter(function (post) {
-        return !post.classList.contains('is-hidden');
-    });
-
-    visiblePosts.sort(function (a, b) {
-        if (sort === 'oldest') {
-            return Number(a.dataset.date) - Number(b.dataset.date);
-        }
-        if (sort === 'title-asc') {
-            return (a.dataset.title || '').localeCompare(b.dataset.title || '');
-        }
-        if (sort === 'title-desc') {
-            return (b.dataset.title || '').localeCompare(a.dataset.title || '');
-        }
-        if (sort === 'comments-desc') {
-            return Number(b.dataset.comments) - Number(a.dataset.comments);
-        }
-        if (sort === 'reactions-desc') {
-            return Number(b.dataset.reactions) - Number(a.dataset.reactions);
-        }
-
-        return Number(b.dataset.date) - Number(a.dataset.date);
-    });
-
-    const container = document.querySelector('.bo-feed-main');
-    if (!container) {
-        return;
-    }
-
-    visiblePosts.forEach(function (post) {
-        container.appendChild(post);
-    });
 }
 
 document.querySelectorAll('.js-comment-form').forEach(function (form) {
@@ -1504,7 +1489,6 @@ document.addEventListener('submit', async function (event) {
         postEl.dataset.comments = String(data.commentCount);
         commentForm.reset();
         syncCommentSubmitVisibility(commentForm);
-        applyPostFilters();
         return;
     }
 
@@ -1555,16 +1539,6 @@ document.addEventListener('submit', async function (event) {
     }
 });
 
-const searchInput = document.getElementById('bo-post-search');
-const sortSelect = document.getElementById('bo-post-sort');
-if (searchInput) {
-    searchInput.addEventListener('input', applyPostFilters);
-}
-if (sortSelect) {
-    sortSelect.addEventListener('change', applyPostFilters);
-}
-
 autoHideExistingFlashes();
-applyPostFilters();
 </script>
 {% endblock %}

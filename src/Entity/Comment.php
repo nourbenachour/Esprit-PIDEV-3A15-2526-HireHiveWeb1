@@ -79,12 +79,7 @@ class Comment
         }
 
         try {
-            if (method_exists($this->user, '__load')) {
-                $this->user->__load();
-            } else {
-                // Touch a non-identifier field so invalid relations fail here instead of in Twig.
-                $this->user->getEmail();
-            }
+            $this->user->getEmail();
         } catch (\Throwable) {
             $this->user = null;
         }

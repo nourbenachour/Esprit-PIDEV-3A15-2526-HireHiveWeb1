@@ -57,11 +57,7 @@ class Reaction
         }
 
         try {
-            if (method_exists($this->user, '__load')) {
-                $this->user->__load();
-            } else {
-                $this->user->getEmail();
-            }
+            $this->user->getEmail();
         } catch (\Throwable) {
             $this->user = null;
         }

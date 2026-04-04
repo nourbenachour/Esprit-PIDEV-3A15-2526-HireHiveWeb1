@@ -24,9 +24,11 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 class BackofficePostController extends AbstractController
 {
     #[Route('', name: 'app_backoffice_posts_list', methods: ['GET'])]
-    public function index(PostRepository $postRepository): Response
+    public function index(Request $request, PostRepository $postRepository): Response
     {
-        $posts = $postRepository->findAllOrderedByDate();
+        $searchTerm = trim((string) $request->query->get('q', ''));
+        $currentSort = $this->normalizeSort((string) $request->query->get('sort', 'newest'));
+        $posts = $postRepository->findAllOrderedByDate($searchTerm, $currentSort);
 
         $commentForms = [];
         foreach ($posts as $post) {
@@ -39,6 +41,8 @@ class BackofficePostController extends AbstractController
         return $this->render('post/backoffice/posts.html.twig', [
             'posts' => $posts,
             'commentForms' => $commentForms,
+            'searchTerm' => $searchTerm,
+            'currentSort' => $currentSort,
         ]);
     }
 
@@ -138,6 +142,20 @@ class BackofficePostController extends AbstractController
         $user = $this->getUser();
 
         return $user instanceof Users ? $user : null;
+    }
+
+    private function normalizeSort(string $sort): string
+    {
+        $allowedSorts = [
+            'newest',
+            'oldest',
+            'title-asc',
+            'title-desc',
+            'comments-desc',
+            'reactions-desc',
+        ];
+
+        return in_array($sort, $allowedSorts, true) ? $sort : 'newest';
     }
 
     private function handlePostImageUpload(FormInterface $form, Post $post, SluggerInterface $slugger): void

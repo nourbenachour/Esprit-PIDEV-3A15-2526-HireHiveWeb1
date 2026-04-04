@@ -99,18 +99,13 @@ class Post
         }
 
         try {
-            if (method_exists($this->id_user, '__load')) {
-                $this->id_user->__load();
-            } else {
-                // Touch a non-identifier field so invalid relations fail here instead of in Twig.
-                $this->id_user->getEmail();
-            }
-        } catch (\Throwable) {
-            $this->id_user = null;
-        }
-
-        return $this->id_user;
+        $this->id_user->getEmail();
+    } catch (\Throwable) {
+        $this->id_user = null;
     }
+
+    return $this->id_user;
+}
 
     public function setId_user(?Users $value): void
     {

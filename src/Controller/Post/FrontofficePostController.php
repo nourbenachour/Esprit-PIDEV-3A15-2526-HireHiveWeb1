@@ -22,11 +22,13 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 class FrontofficePostController extends AbstractController
 {
     #[Route('', name: 'app_frontoffice_feed', methods: ['GET'])]
-    public function feed(PostRepository $postRepository): Response
+    public function feed(Request $request, PostRepository $postRepository): Response
     {
         $user = $this->currentUser();
         $userRole = $user?->getRole();
-        $posts = $postRepository->findFeedPosts($userRole);
+        $searchTerm = trim((string) $request->query->get('q', ''));
+        $currentSort = $this->normalizeSort((string) $request->query->get('sort', 'newest'));
+        $posts = $postRepository->findFeedPosts($userRole, $searchTerm, $currentSort);
 
         $commentForms = [];
         foreach ($posts as $post) {
@@ -39,6 +41,8 @@ class FrontofficePostController extends AbstractController
         return $this->render('post/frontoffice/feed.html.twig', [
             'posts' => $posts,
             'commentForms' => $commentForms,
+            'searchTerm' => $searchTerm,
+            'currentSort' => $currentSort,
         ]);
     }
 
@@ -154,6 +158,20 @@ class FrontofficePostController extends AbstractController
         $user = $this->getUser();
 
         return $user instanceof Users ? $user : null;
+    }
+
+    private function normalizeSort(string $sort): string
+    {
+        $allowedSorts = [
+            'newest',
+            'oldest',
+            'title-asc',
+            'title-desc',
+            'comments-desc',
+            'reactions-desc',
+        ];
+
+        return in_array($sort, $allowedSorts, true) ? $sort : 'newest';
     }
 
     private function handlePostImageUpload(FormInterface $form, Post $post, SluggerInterface $slugger): void
