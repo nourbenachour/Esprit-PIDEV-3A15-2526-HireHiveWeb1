@@ -15,15 +15,22 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class JobOfferBackController extends AbstractController
 {
     #[Route('/offres', name: 'app_joboffer_back_list', methods: ['GET'])]
-    public function list(Request $request, JobOfferRepository $repo): Response
+    public function list(Request $request, JobOfferRepository $repo, ApplicationRepository $appRepo): Response
     {
         $search = $request->query->get('q', '');
         $status = $request->query->get('status', '');
         $contractType = $request->query->get('contract_type', '');
         $offers = $repo->findAll($search, $status, $contractType);
 
+        // Pre-load candidatures for every offer
+        $candidaturesMap = [];
+        foreach ($offers as $o) {
+            $candidaturesMap[$o['id_job_offer']] = $appRepo->findByJobOffer((int) $o['id_job_offer']);
+        }
+
         return $this->render('joboffer/backoffice/offres.html.twig', [
             'offers' => $offers,
+            'candidatures_map' => $candidaturesMap,
             'filter_query' => $search,
             'filter_status' => $status,
             'filter_contract_type' => $contractType,
@@ -154,8 +161,8 @@ class JobOfferBackController extends AbstractController
             return $this->redirectToRoute('app_joboffer_back_list');
         }
         $appRepo->updateStatus($id, $status);
-        $this->addFlash('success', 'Statut de la candidature mis à jour.');
-        return $this->redirectToRoute('app_joboffer_back_candidatures', ['id' => $app['job_offer_id']]);
+        $this->addFlash('success', 'Statut de la candidature mis à jour ✅');
+        return $this->redirectToRoute('app_joboffer_back_list');
     }
 
     private function validateOffreData($data): array

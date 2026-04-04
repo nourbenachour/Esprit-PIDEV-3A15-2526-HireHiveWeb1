@@ -6,68 +6,86 @@
 <style>
 .offre-form-shell { padding: 16px; }
 .offre-form-card {
-    max-width: 840px;
+    max-width: 860px;
     margin: 0 auto;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px;
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
-.offre-form-header { margin-bottom: 10px; }
-.offre-form-title { margin: 0; color: var(--text); font-size: 20px; font-weight: 800; }
-.small-note { color: var(--muted); font-size: 13px; margin: 4px 0 0 0; }
-.form-grid-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.offre-form-header {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+}
+.offre-form-title {
+    margin: 0; color: var(--text); font-size: 22px; font-weight: 900;
+    display: flex; align-items: center; gap: 8px;
+}
+.small-note { color: var(--muted); font-size: 13px; margin: 6px 0 0 0; }
+.form-grid-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
 .form-full { grid-column: 1 / -1; }
-.offre-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
-.form-group { display: flex; flex-direction: column; gap: 4px; }
-.form-group label { color: var(--text); font-weight: 700; font-size: 13px; }
+.offre-form-actions {
+    display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;
+    padding-top: 16px; border-top: 1px solid var(--border);
+}
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label {
+    color: var(--text); font-weight: 800; font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+}
 .form-group input, .form-group select, .form-group textarea {
     background: #0f172a;
     border: 1px solid var(--border);
     color: var(--text);
-    border-radius: 8px;
-    padding: 10px 12px;
+    border-radius: 10px;
+    padding: 11px 14px;
     font-size: 14px;
     font-family: inherit;
+    transition: all 0.2s ease;
 }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(124,58,237,0.18);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.18);
 }
-.form-group textarea { min-height: 100px; resize: vertical; }
-.field-error { border-color: #ef4444 !important; }
+.form-group textarea { min-height: 110px; resize: vertical; }
+.field-error { border-color: #ef4444 !important; box-shadow: 0 0 0 2px rgba(239,68,68,0.15) !important; }
 .error-msg { color: #f87171; font-size: 12px; min-height: 16px; }
 </style>
 
 <div class="offre-form-shell">
     <div class="offre-form-card">
         <div class="offre-form-header">
-            <h2 class="offre-form-title">{{ title }}</h2>
-            <p class="small-note">Champs marqués * obligatoires. Validation en temps réel.</p>
+            <h2 class="offre-form-title">
+                {% if is_edit %}✏️{% else %}➕{% endif %}
+                {{ title }}
+            </h2>
+            <p class="small-note">📌 Champs marqués * obligatoires. Validation en temps réel ⚡</p>
         </div>
 
         {% for message in app.flashes('error') %}
-            <div style="background:#3b1219; color:#fb7185; border:1px solid #9f1239; border-radius:8px; padding:10px; margin-bottom:8px; font-size:13px;">{{ message }}</div>
+            <div style="background:#3b1219; color:#fb7185; border:1px solid #9f1239; border-radius:10px; padding:12px 14px; margin-bottom:10px; font-size:13px; font-weight:600;">❌ {{ message }}</div>
         {% endfor %}
         {% for message in app.flashes('success') %}
-            <div style="background:#0d3320; color:#4ade80; border:1px solid #166534; border-radius:8px; padding:10px; margin-bottom:8px; font-size:13px;">{{ message }}</div>
+            <div style="background:#0d3320; color:#4ade80; border:1px solid #166534; border-radius:10px; padding:12px 14px; margin-bottom:10px; font-size:13px; font-weight:600;">✅ {{ message }}</div>
         {% endfor %}
 
         <form method="post" id="offreForm" novalidate>
             <div class="form-grid-two">
                 <div class="form-group">
-                    <label for="field-title">Titre *</label>
-                    <input type="text" id="field-title" name="title" value="{{ offre.title|default('') }}" required minlength="3">
+                    <label for="field-title">📝 Titre *</label>
+                    <input type="text" id="field-title" name="title" value="{{ offre.title|default('') }}" required minlength="3" placeholder="Ex: Développeur Full Stack">
                     <span class="error-msg" id="err-title"></span>
                 </div>
                 <div class="form-group">
-                    <label for="field-location">Localisation *</label>
-                    <input type="text" id="field-location" name="location" value="{{ offre.location|default('') }}" required>
+                    <label for="field-location">📍 Localisation *</label>
+                    <input type="text" id="field-location" name="location" value="{{ offre.location|default('') }}" required placeholder="Ex: Paris, France">
                     <span class="error-msg" id="err-location"></span>
                 </div>
                 <div class="form-group">
-                    <label for="field-contract">Type de contrat *</label>
+                    <label for="field-contract">📋 Type de contrat *</label>
                     <select id="field-contract" name="contract_type">
                         {% for ct in ['CDI','CDD','Stage','Freelance'] %}
                             <option value="{{ ct }}" {{ (offre.contract_type|default('CDI')) == ct ? 'selected' : '' }}>{{ ct }}</option>
@@ -76,33 +94,35 @@
                     <span class="error-msg" id="err-contract"></span>
                 </div>
                 <div class="form-group">
-                    <label for="field-status">Statut *</label>
+                    <label for="field-status">📌 Statut *</label>
                     <select id="field-status" name="status">
                         {% for st in ['OPEN','CLOSED','DRAFT'] %}
-                            <option value="{{ st }}" {{ (offre.status|default('OPEN')) == st ? 'selected' : '' }}>{{ st }}</option>
+                            <option value="{{ st }}" {{ (offre.status|default('OPEN')) == st ? 'selected' : '' }}>
+                                {% if st == 'OPEN' %}🟢{% elseif st == 'CLOSED' %}🔴{% else %}📝{% endif %} {{ st }}
+                            </option>
                         {% endfor %}
                     </select>
                     <span class="error-msg" id="err-status"></span>
                 </div>
                 <div class="form-group form-full">
-                    <label for="field-desc">Description *</label>
-                    <textarea id="field-desc" name="description" required minlength="20">{{ offre.description|default('') }}</textarea>
+                    <label for="field-desc">📄 Description *</label>
+                    <textarea id="field-desc" name="description" required minlength="20" placeholder="Décrivez le poste en détail (min 20 caractères)...">{{ offre.description|default('') }}</textarea>
                     <span class="error-msg" id="err-desc"></span>
                 </div>
                 <div class="form-group form-full">
-                    <label for="field-skills">Compétences requises *</label>
-                    <input type="text" id="field-skills" name="skills" value="{{ offre.skills|default('') }}" required placeholder="Java, Python, SQL...">
+                    <label for="field-skills">🎯 Compétences requises *</label>
+                    <input type="text" id="field-skills" name="skills" value="{{ offre.skills|default('') }}" required placeholder="Java, Python, SQL, React...">
                     <span class="error-msg" id="err-skills"></span>
                 </div>
                 <div class="form-group form-full">
-                    <label for="field-soft">Soft Skills</label>
-                    <input type="text" id="field-soft" name="soft_skills" value="{{ offre.soft_skills|default('') }}" placeholder="Communication, Leadership...">
+                    <label for="field-soft">💡 Soft Skills</label>
+                    <input type="text" id="field-soft" name="soft_skills" value="{{ offre.soft_skills|default('') }}" placeholder="Communication, Leadership, Travail d'équipe...">
                     <span class="error-msg" id="err-soft"></span>
                 </div>
             </div>
             <div class="offre-form-actions">
-                <a class="btn btn-ghost" href="{{ path('app_joboffer_back_list') }}">Annuler</a>
-                <button class="btn btn-primary" type="submit" id="btn-submit">Enregistrer</button>
+                <a class="btn btn-ghost" href="{{ path('app_joboffer_back_list') }}">❌ Annuler</a>
+                <button class="btn btn-primary" type="submit" id="btn-submit">💾 Enregistrer</button>
             </div>
         </form>
     </div>
@@ -111,10 +131,10 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const rules = {
-        'field-title':    { required: true, minLen: 3, letter: true, errId: 'err-title',    msg: 'Le titre est obligatoire (min 3 caractères, au moins une lettre).' },
-        'field-location': { required: true, minLen: 1, letter: true, errId: 'err-location', msg: 'La localisation est obligatoire (au moins une lettre).' },
-        'field-desc':     { required: true, minLen: 20, letter: false, errId: 'err-desc',   msg: 'La description est obligatoire (min 20 caractères).' },
-        'field-skills':   { required: true, minLen: 1, letter: false, errId: 'err-skills',  msg: 'Les compétences requises sont obligatoires.' },
+        'field-title':    { required: true, minLen: 3, letter: true, errId: 'err-title',    msg: '⚠️ Le titre est obligatoire (min 3 caractères, au moins une lettre).' },
+        'field-location': { required: true, minLen: 1, letter: true, errId: 'err-location', msg: '⚠️ La localisation est obligatoire (au moins une lettre).' },
+        'field-desc':     { required: true, minLen: 20, letter: false, errId: 'err-desc',   msg: '⚠️ La description est obligatoire (min 20 caractères).' },
+        'field-skills':   { required: true, minLen: 1, letter: false, errId: 'err-skills',  msg: '⚠️ Les compétences requises sont obligatoires.' },
     };
 
     function validate(id) {

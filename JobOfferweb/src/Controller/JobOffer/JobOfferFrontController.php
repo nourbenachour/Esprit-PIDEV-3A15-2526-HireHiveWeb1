@@ -12,14 +12,22 @@ use Symfony\Component\Routing\Attribute\Route;
 class JobOfferFrontController extends AbstractController
 {
     #[Route('/frontoffice/job/offers', name: 'app_joboffer_front_list', methods: ['GET'])]
-    public function offers(Request $request, JobOfferRepository $repo): Response
+    public function offers(Request $request, JobOfferRepository $repo, ApplicationRepository $appRepo): Response
     {
         $search = $request->query->get('q', '');
         $contractType = $request->query->get('contract_type', '');
         $offers = $repo->findOpen($search, $contractType);
 
+        // Also load the current user's applications for the combined view
+        $applications = [];
+        $user = $this->getUser();
+        if ($user && method_exists($user, 'getId')) {
+            $applications = $appRepo->findByCandidate((int) $user->getId());
+        }
+
         return $this->render('joboffer/frontoffice/offers.html.twig', [
             'offers' => $offers,
+            'applications' => $applications,
             'filter_query' => $search,
             'filter_contract_type' => $contractType,
         ]);
@@ -31,6 +39,12 @@ class JobOfferFrontController extends AbstractController
         $offre = $repo->findById($id);
         if (!$offre) {
             $this->addFlash('error', 'Offre introuvable.');
+            return $this->redirectToRoute('app_joboffer_front_list');
+        }
+
+        // Closed/draft offers are not visible to candidates
+        if (($offre['status'] ?? '') !== 'OPEN') {
+            $this->addFlash('error', "Cette offre n'est plus disponible.");
             return $this->redirectToRoute('app_joboffer_front_list');
         }
 
@@ -109,15 +123,8 @@ class JobOfferFrontController extends AbstractController
     }
 
     #[Route('/frontoffice/job/my-applications', name: 'app_joboffer_front_my_applications', methods: ['GET'])]
-    public function myApplications(ApplicationRepository $appRepo): Response
+    public function myApplications(): Response
     {
-        $user = $this->getUser();
-        if (!$user) { return $this->redirectToRoute('app_login'); }
-
-        $applications = $appRepo->findByCandidate((int) $user->getId());
-
-        return $this->render('joboffer/frontoffice/my_applications.html.twig', [
-            'applications' => $applications,
-        ]);
+        return $this->redirectToRoute('app_joboffer_front_list', ['tab' => 'candidatures']);
     }
 }

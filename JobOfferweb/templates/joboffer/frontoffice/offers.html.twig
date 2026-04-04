@@ -1,173 +1,522 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Offres d'emploi - HireHive{% endblock %}
+{% block title %}💼 Offres & Candidatures - HireHive{% endblock %}
 
 {% block content %}
 <style>
-.offers-page { max-width: 960px; margin: 0 auto; }
-.offers-header { margin-bottom: 20px; }
-.offers-title { margin: 0; font-size: 24px; font-weight: 800; color: #1f2937; }
-.offers-subtitle { margin: 4px 0 0; color: #6b7280; font-size: 15px; }
+/* ============================================
+   COMBINED OFFERS + CANDIDATURES PAGE
+   ============================================ */
+.combined-layout {
+    display: flex;
+    gap: 20px;
+    max-width: 1060px;
+    margin: 0 auto;
+    align-items: flex-start;
+}
+
+/* ---- RIGHT SIDEBAR ---- */
+.side-nav {
+    position: sticky;
+    top: 100px;
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.side-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    background: #fff;
+    color: #6b7280;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+.side-nav-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 4px;
+    background: transparent;
+    border-radius: 0 4px 4px 0;
+    transition: background 0.2s ease;
+}
+.side-nav-btn:hover {
+    border-color: var(--accent);
+    background: #f9f5ff;
+    color: var(--accent);
+    transform: translateX(3px);
+}
+.side-nav-btn.active {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    color: var(--accent);
+    box-shadow: 0 4px 16px rgba(124,58,237,0.12);
+}
+.side-nav-btn.active::before { background: var(--accent); }
+.side-nav-btn .nav-emoji { font-size: 20px; }
+.side-nav-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 999px;
+    min-width: 22px;
+    text-align: center;
+}
+
+/* ---- MAIN CONTENT ---- */
+.main-section { flex: 1; min-width: 0; }
+
+/* ---- PANEL TOGGLE ---- */
+.panel-section { display: none; }
+.panel-section.active-panel { display: block; animation: panelFadeIn 0.35s ease; }
+@keyframes panelFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- OFFERS PANEL ---- */
+.offers-hero {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
+    border-radius: 18px;
+    padding: 28px 30px;
+    margin-bottom: 20px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+.offers-hero::after {
+    content: '💼';
+    position: absolute;
+    right: 24px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 60px;
+    opacity: 0.2;
+}
+.offers-hero h1 { margin: 0; font-size: 26px; font-weight: 900; }
+.offers-hero p { margin: 6px 0 0; font-size: 15px; opacity: 0.9; }
+.offers-hero .hero-count {
+    display: inline-block;
+    margin-top: 10px;
+    background: rgba(255,255,255,0.2);
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    backdrop-filter: blur(4px);
+}
+
 .offers-filters {
     display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     padding: 16px;
     background: #f9fafb;
-    border-radius: 12px;
+    border-radius: 14px;
     border: 1px solid #e5e7eb;
 }
 .offers-filters .fg { display: flex; flex-direction: column; gap: 4px; }
-.offers-filters label { font-size: 12px; font-weight: 700; color: #6b7280; }
+.offers-filters label { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.3px; }
 .offers-filters input, .offers-filters select {
-    padding: 9px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 14px;
-    background: #fff;
-    color: #1f2937;
-    min-width: 180px;
+    padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 10px;
+    font-size: 13px; background: #fff; color: #1f2937; min-width: 180px;
 }
 .offers-filters input:focus, .offers-filters select:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(124,58,237,0.15);
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
 }
+
 .offers-grid { display: flex; flex-direction: column; gap: 14px; }
+
 .offer-card {
     background: #fff;
     border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 18px 20px;
-    transition: box-shadow 0.2s ease, transform 0.15s ease;
+    border-radius: 16px;
+    padding: 20px 22px;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.offer-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 4px;
+    background: linear-gradient(180deg, var(--accent), #c084fc);
+    border-radius: 4px 0 0 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 .offer-card:hover {
-    box-shadow: 0 8px 24px rgba(124,58,237,0.10);
-    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(124,58,237,0.10);
+    transform: translateY(-3px);
+    border-color: #d8b4fe;
 }
+.offer-card:hover::before { opacity: 1; }
+
 .offer-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-.offer-card-title { margin: 0; font-size: 17px; font-weight: 800; color: #1f2937; }
+.offer-card-title { margin: 0; font-size: 18px; font-weight: 900; color: #1f2937; display: flex; align-items: center; gap: 8px; }
 .offer-card-title a { color: inherit; text-decoration: none; }
 .offer-card-title a:hover { color: var(--accent); }
-.offer-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+
+.offer-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .offer-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-    background: #f3f0ff;
-    color: var(--accent);
-    border: 1px solid #e4ddff;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 12px; border-radius: 999px;
+    font-size: 12px; font-weight: 700;
+    background: #f3f0ff; color: var(--accent); border: 1px solid #e4ddff;
 }
 .offer-tag.location { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-.offer-desc { margin: 10px 0 0; color: #4b5563; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.offer-tag.date { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
+
+.offer-desc {
+    margin: 12px 0 0; color: #4b5563; font-size: 14px; line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .offer-skills { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
 .skill-chip {
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    background: #ede9fe;
-    color: #5b21b6;
-}
-.offer-actions { margin-top: 12px; display: flex; gap: 8px; }
-.btn-apply {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 18px;
-    border-radius: 10px;
-    background: var(--accent);
-    color: #fff;
-    font-weight: 700;
-    font-size: 13px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: background 0.15s ease, transform 0.15s ease;
-}
-.btn-apply:hover { background: var(--accent-dark); transform: translateY(-1px); }
-.btn-detail {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 18px;
-    border-radius: 10px;
-    background: #f3f0ff;
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 13px;
-    text-decoration: none;
+    padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+    background: linear-gradient(135deg, #ede9fe, #f5f3ff); color: #5b21b6;
     border: 1px solid #e4ddff;
-    transition: background 0.15s ease;
 }
-.btn-detail:hover { background: #ede9fe; }
-.offers-count { color: #6b7280; font-size: 13px; margin-top: 4px; }
-.no-offers { text-align: center; padding: 40px; color: #9ca3af; font-size: 15px; }
+.offer-actions { margin-top: 14px; display: flex; gap: 8px; }
+.btn-apply {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    color: #fff; font-weight: 800; font-size: 13px;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(124,58,237,0.25);
+}
+.btn-apply:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,58,237,0.35); }
+.btn-detail {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 12px;
+    background: #fff; color: var(--accent); font-weight: 800; font-size: 13px;
+    text-decoration: none; border: 2px solid #e4ddff;
+    transition: all 0.15s ease;
+}
+.btn-detail:hover { background: #f5f3ff; border-color: var(--accent); }
+
+.no-offers {
+    text-align: center; padding: 50px 20px; color: #9ca3af;
+    background: #f9fafb; border-radius: 16px; border: 1px dashed #d1d5db;
+}
+.no-offers .empty-icon { font-size: 48px; margin-bottom: 10px; }
+
+/* ---- CANDIDATURES PANEL ---- */
+.apps-hero {
+    background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 50%, #7dd3fc 100%);
+    border-radius: 18px;
+    padding: 28px 30px;
+    margin-bottom: 20px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+.apps-hero::after {
+    content: '📋';
+    position: absolute;
+    right: 24px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 60px;
+    opacity: 0.2;
+}
+.apps-hero h1 { margin: 0; font-size: 26px; font-weight: 900; }
+.apps-hero p { margin: 6px 0 0; font-size: 15px; opacity: 0.9; }
+.apps-hero .hero-count {
+    display: inline-block; margin-top: 10px;
+    background: rgba(255,255,255,0.2);
+    padding: 5px 14px; border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+    backdrop-filter: blur(4px);
+}
+
+.apps-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.app-stat-card {
+    flex: 1; min-width: 120px;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+    padding: 14px 16px; text-align: center;
+}
+.app-stat-card .stat-emoji { font-size: 24px; }
+.app-stat-card .stat-value { font-size: 22px; font-weight: 900; color: #1f2937; }
+.app-stat-card .stat-label { font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: 700; }
+
+.apps-list { display: flex; flex-direction: column; gap: 12px; }
+
+.app-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    transition: all 0.25s ease;
+    position: relative;
+}
+.app-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0; width: 4px;
+    border-radius: 4px 0 0 4px;
+}
+.app-card.status-pending::before { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
+.app-card.status-accepted::before { background: linear-gradient(180deg, #10b981, #34d399); }
+.app-card.status-rejected::before { background: linear-gradient(180deg, #ef4444, #f87171); }
+
+.app-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
+}
+
+.app-status-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: grid; place-items: center; font-size: 22px; flex-shrink: 0;
+}
+.app-status-icon.pending { background: #fef3c7; }
+.app-status-icon.accepted { background: #d1fae5; }
+.app-status-icon.rejected { background: #fee2e2; }
+
+.app-info { flex: 1; min-width: 200px; }
+.app-offer-title { margin: 0; font-size: 16px; font-weight: 900; color: #1f2937; }
+.app-offer-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.app-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    background: #f3f0ff; color: var(--accent); border: 1px solid #e4ddff;
+}
+.app-tag.loc { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.app-tag.date { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }  
+.app-lettre {
+    margin-top: 6px; color: #6b7280; font-size: 13px; font-style: italic;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+.app-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.app-status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 16px; border-radius: 999px;
+    font-size: 13px; font-weight: 900; letter-spacing: 0.3px;
+}
+.app-status-badge.pending { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.app-status-badge.accepted { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.app-status-badge.rejected { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+.app-cv-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 14px; border-radius: 10px;
+    background: #f3f0ff; color: var(--accent);
+    font-weight: 700; font-size: 12px;
+    text-decoration: none; border: 1px solid #e4ddff;
+    transition: all 0.15s ease;
+}
+.app-cv-link:hover { background: #ede9fe; transform: translateY(-1px); }
+
+.no-apps {
+    text-align: center; padding: 50px 20px; color: #9ca3af;
+    background: #f9fafb; border-radius: 16px; border: 1px dashed #d1d5db;
+}
+.no-apps .empty-icon { font-size: 48px; margin-bottom: 10px; }
+.no-apps a { color: var(--accent); font-weight: 800; text-decoration: none; }
+.no-apps a:hover { text-decoration: underline; }
+
+@media (max-width: 768px) {
+    .combined-layout { flex-direction: column-reverse; }
+    .side-nav { width: 100%; position: static; flex-direction: row; }
+    .side-nav-btn { flex: 1; justify-content: center; }
+}
 </style>
 
-<div class="offers-page">
-    <div class="offers-header">
-        <h1 class="offers-title">Offres d'emploi</h1>
-        <p class="offers-subtitle">Trouvez l'opportunité qui correspond à votre profil</p>
-        <p class="offers-count">{{ offers|length }} offre{{ offers|length > 1 ? 's' : '' }} disponible{{ offers|length > 1 ? 's' : '' }}</p>
-    </div>
+<div class="combined-layout">
+    <!-- ====== MAIN CONTENT ====== -->
+    <div class="main-section">
 
-    <form method="get" class="offers-filters">
-        <div class="fg" style="flex:1; min-width:200px;">
-            <label for="search-q">Recherche</label>
-            <input id="search-q" type="text" name="q" value="{{ filter_query }}" placeholder="Titre, description, lieu...">
-        </div>
-        <div class="fg">
-            <label for="search-ct">Type de contrat</label>
-            <select id="search-ct" name="contract_type">
-                <option value="">Tous</option>
-                <option value="CDI" {{ filter_contract_type == 'CDI' ? 'selected' : '' }}>CDI</option>
-                <option value="CDD" {{ filter_contract_type == 'CDD' ? 'selected' : '' }}>CDD</option>
-                <option value="Stage" {{ filter_contract_type == 'Stage' ? 'selected' : '' }}>Stage</option>
-                <option value="Freelance" {{ filter_contract_type == 'Freelance' ? 'selected' : '' }}>Freelance</option>
-            </select>
-        </div>
-        <div class="fg" style="display:flex; flex-direction:row; gap:8px; align-items:flex-end;">
-            <button type="submit" class="btn-apply">Rechercher</button>
-            <a href="{{ path('app_joboffer_front_list') }}" class="btn-detail">Réinitialiser</a>
-        </div>
-    </form>
+        <!-- ===== OFFERS PANEL ===== -->
+        <div class="panel-section active-panel" id="panel-offers">
+            <div class="offers-hero">
+                <h1>🔥 Offres d'emploi</h1>
+                <p>Trouvez l'opportunité qui correspond à votre profil ✨</p>
+                <span class="hero-count">📊 {{ offers|length }} offre{{ offers|length > 1 ? 's' : '' }} disponible{{ offers|length > 1 ? 's' : '' }}</span>
+            </div>
 
-    <div class="offers-grid">
-        {% for o in offers %}
-        <div class="offer-card">
-            <div class="offer-card-top">
-                <div>
-                    <h3 class="offer-card-title"><a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}">{{ o.title }}</a></h3>
-                    <div class="offer-meta">
-                        <span class="offer-tag location">📍 {{ o.location }}</span>
-                        <span class="offer-tag">{{ o.contract_type }}</span>
-                        {% if o.created_at is defined and o.created_at %}
-                            <span class="offer-tag" style="background:#f0f9ff; color:#0369a1; border-color:#bae6fd;">{{ o.created_at|date('d/m/Y') }}</span>
-                        {% endif %}
+            <form method="get" class="offers-filters">
+                <div class="fg" style="flex:1; min-width:200px;">
+                    <label for="search-q">🔍 Recherche</label>
+                    <input id="search-q" type="text" name="q" value="{{ filter_query }}" placeholder="Titre, description, lieu...">
+                </div>
+                <div class="fg">
+                    <label for="search-ct">📋 Type de contrat</label>
+                    <select id="search-ct" name="contract_type">
+                        <option value="">Tous</option>
+                        <option value="CDI" {{ filter_contract_type == 'CDI' ? 'selected' : '' }}>CDI</option>
+                        <option value="CDD" {{ filter_contract_type == 'CDD' ? 'selected' : '' }}>CDD</option>
+                        <option value="Stage" {{ filter_contract_type == 'Stage' ? 'selected' : '' }}>Stage</option>
+                        <option value="Freelance" {{ filter_contract_type == 'Freelance' ? 'selected' : '' }}>Freelance</option>
+                    </select>
+                </div>
+                <div class="fg" style="display:flex; flex-direction:row; gap:8px; align-items:flex-end;">
+                    <button type="submit" class="btn-apply" style="box-shadow:none;">🔎 Rechercher</button>
+                    <a href="{{ path('app_joboffer_front_list') }}" class="btn-detail">🔄 Réinitialiser</a>
+                </div>
+            </form>
+
+            <div class="offers-grid">
+                {% for o in offers %}
+                <div class="offer-card">
+                    <div class="offer-card-top">
+                        <div>
+                            <h3 class="offer-card-title">
+                                🚀 <a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}">{{ o.title }}</a>
+                            </h3>
+                            <div class="offer-meta">
+                                <span class="offer-tag location">📍 {{ o.location }}</span>
+                                <span class="offer-tag">📋 {{ o.contract_type }}</span>
+                                {% if o.created_at is defined and o.created_at %}
+                                    <span class="offer-tag date">🕐 {{ o.created_at|date('d/m/Y') }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="offer-desc">{{ o.description }}</p>
+                    {% if o.skills is defined and o.skills %}
+                    <div class="offer-skills">
+                        {% for skill in o.skills|split(',') %}
+                            <span class="skill-chip">🎯 {{ skill|trim }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="offer-actions">
+                        <a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}" class="btn-detail">👁️ Voir détail</a>
+                        <a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}#apply" class="btn-apply">✉️ Postuler →</a>
                     </div>
                 </div>
-            </div>
-            <p class="offer-desc">{{ o.description }}</p>
-            {% if o.skills is defined and o.skills %}
-            <div class="offer-skills">
-                {% for skill in o.skills|split(',') %}
-                    <span class="skill-chip">{{ skill|trim }}</span>
+                {% else %}
+                <div class="no-offers">
+                    <div class="empty-icon">🔍</div>
+                    <p style="font-weight:700; font-size:16px; color:#4b5563;">Aucune offre disponible pour le moment</p>
+                    <p>De nouvelles opportunités arrivent bientôt ! 🌟</p>
+                </div>
                 {% endfor %}
             </div>
-            {% endif %}
-            <div class="offer-actions">
-                <a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}" class="btn-detail">Voir détail</a>
-                <a href="{{ path('app_joboffer_front_detail', {id: o.id_job_offer}) }}#apply" class="btn-apply">Postuler →</a>
+        </div>
+
+        <!-- ===== CANDIDATURES PANEL ===== -->
+        <div class="panel-section" id="panel-candidatures">
+            <div class="apps-hero">
+                <h1>📋 Mes Candidatures</h1>
+                <p>Suivez le statut de vos candidatures en temps réel 🎯</p>
+                <span class="hero-count">📊 {{ applications|length }} candidature{{ applications|length > 1 ? 's' : '' }}</span>
+            </div>
+
+            {% set pending_count = applications|filter(a => a.status == 'PENDING')|length %}
+            {% set accepted_count = applications|filter(a => a.status == 'ACCEPTED')|length %}
+            {% set rejected_count = applications|filter(a => a.status == 'REJECTED')|length %}
+
+            <div class="apps-stats">
+                <div class="app-stat-card">
+                    <div class="stat-emoji">⏳</div>
+                    <div class="stat-value">{{ pending_count }}</div>
+                    <div class="stat-label">En Attente</div>
+                </div>
+                <div class="app-stat-card">
+                    <div class="stat-emoji">✅</div>
+                    <div class="stat-value">{{ accepted_count }}</div>
+                    <div class="stat-label">Acceptées</div>
+                </div>
+                <div class="app-stat-card">
+                    <div class="stat-emoji">❌</div>
+                    <div class="stat-value">{{ rejected_count }}</div>
+                    <div class="stat-label">Refusées</div>
+                </div>
+            </div>
+
+            <div class="apps-list">
+                {% for a in applications %}
+                    {% set status_class = a.status|lower == 'accepted' ? 'accepted' : (a.status|lower == 'rejected' ? 'rejected' : 'pending') %}
+                    <div class="app-card status-{{ status_class }}">
+                        <div class="app-status-icon {{ status_class }}">
+                            {% if status_class == 'accepted' %}🎉{% elseif status_class == 'rejected' %}😔{% else %}⏳{% endif %}
+                        </div>
+                        <div class="app-info">
+                            <h3 class="app-offer-title">{{ a.offer_title|default('Offre supprimée') }}</h3>
+                            <div class="app-offer-meta">
+                                {% if a.location is defined and a.location %}
+                                    <span class="app-tag loc">📍 {{ a.location }}</span>
+                                {% endif %}
+                                {% if a.contract_type is defined and a.contract_type %}
+                                    <span class="app-tag">📋 {{ a.contract_type }}</span>
+                                {% endif %}
+                                {% if a.application_date is defined and a.application_date %}
+                                    <span class="app-tag date">📅 {{ a.application_date|date('d/m/Y') }}</span>
+                                {% endif %}
+                            </div>
+                            {% if a.lettre is defined and a.lettre %}
+                                <p class="app-lettre">💬 "{{ a.lettre }}"</p>
+                            {% endif %}
+                        </div>
+                        <div class="app-right">
+                            <span class="app-status-badge {{ status_class }}">
+                                {% if status_class == 'accepted' %}✅ Acceptée{% elseif status_class == 'rejected' %}❌ Refusée{% else %}⏳ En attente{% endif %}
+                            </span>
+                            {% if a.cv_file_path is defined and a.cv_file_path %}
+                                <a href="{{ a.cv_file_path }}" target="_blank" class="app-cv-link">📄 Mon CV</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="no-apps">
+                        <div class="empty-icon">📭</div>
+                        <p style="font-weight:700; font-size:16px; color:#4b5563;">Vous n'avez pas encore postulé</p>
+                        <p>Découvrez les offres disponibles et postulez dès maintenant ! 🚀</p>
+                        <p style="margin-top:8px;"><a href="#" onclick="switchPanel('offers'); return false;">← Voir les offres disponibles</a></p>
+                    </div>
+                {% endfor %}
             </div>
         </div>
-        {% else %}
-        <div class="no-offers">
-            <p>Aucune offre disponible pour le moment.</p>
+
+    </div>
+
+    <!-- ====== RIGHT SIDEBAR ====== -->
+    <div class="side-nav">
+        <div class="side-nav-btn active" id="nav-offers" onclick="switchPanel('offers')">
+            <span class="nav-emoji">💼</span>
+            Offres
+            <span class="side-nav-badge">{{ offers|length }}</span>
         </div>
-        {% endfor %}
+        <div class="side-nav-btn" id="nav-candidatures" onclick="switchPanel('candidatures')">
+            <span class="nav-emoji">📋</span>
+            Candidatures
+            <span class="side-nav-badge">{{ applications|length }}</span>
+        </div>
     </div>
 </div>
+
+<script>
+function switchPanel(panel) {
+    document.getElementById('panel-offers').classList.toggle('active-panel', panel === 'offers');
+    document.getElementById('panel-candidatures').classList.toggle('active-panel', panel === 'candidatures');
+    document.getElementById('nav-offers').classList.toggle('active', panel === 'offers');
+    document.getElementById('nav-candidatures').classList.toggle('active', panel === 'candidatures');
+}
+// Auto-switch to candidatures if ?tab=candidatures is in the URL
+document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'candidatures') {
+        switchPanel('candidatures');
+    }
+});
+</script>
 {% endblock %}

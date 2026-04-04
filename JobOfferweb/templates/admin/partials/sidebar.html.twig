@@ -11,8 +11,7 @@
         <a href="{{ path('app_backoffice_posts') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_posts' %}sidebar-btn-active{% endif %}">Postes</a>
         <a href="{{ path('app_backoffice_reclamations') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_reclamations' %}sidebar-btn-active{% endif %}">Réclamations</a>
         <a href="{{ path('app_backoffice_interviews') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_interviews' %}sidebar-btn-active{% endif %}">Interviews</a>
-        <a href="{{ path('app_backoffice_offres') }}" class="sidebar-btn {% if app.request.attributes.get('_route') == 'app_backoffice_offres' %}sidebar-btn-active{% endif %}">Offres d'emploi</a>
-        <a href="{{ path('app_joboffer_back_list') }}" class="sidebar-btn {% if app.request.attributes.get('_route') starts with 'app_joboffer_back' %}sidebar-btn-active{% endif %}">Offres (CRUD)</a>
+        <a href="{{ path('app_joboffer_back_list') }}" class="sidebar-btn {% if app.request.attributes.get('_route') starts with 'app_joboffer_back' %}sidebar-btn-active{% endif %}">💼 Offres d'emploi</a>
     </div>
 
     <div class="sidebar-section">

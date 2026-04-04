@@ -31,8 +31,8 @@
         {% set current = app.request.attributes.get('_route') %}
         <nav class="front-nav">
             <a href="{{ path('app_frontoffice_home') }}" class="nav-link {% if current in ['app_frontoffice', 'app_frontoffice_home'] %}is-active{% endif %}">Accueil</a>
-            <a href="{{ path('app_joboffer_front_list') }}" class="nav-link {% if current starts with 'app_joboffer_front' %}is-active{% endif %}">Offres</a>
-            <a href="{{ path('app_joboffer_front_my_applications') }}" class="nav-link {% if current == 'app_joboffer_front_my_applications' %}is-active{% endif %}">Mes Candidatures</a>
+            <a href="{{ path('app_joboffer_front_list') }}" class="nav-link {% if current starts with 'app_joboffer_front' %}is-active{% endif %}">💼 Offres</a>
+            <a href="{{ path('app_joboffer_front_my_applications') }}" class="nav-link {% if current == 'app_joboffer_front_my_applications' %}is-active{% endif %}">📋 Candidatures</a>
             <a href="{{ path('app_frontoffice_trainings') }}" class="nav-link {% if current == 'app_frontoffice_trainings' %}is-active{% endif %}">Formations</a>
             <a href="{{ path('app_frontoffice_interviews') }}" class="nav-link {% if current == 'app_frontoffice_interviews' %}is-active{% endif %}">Entretiens</a>
             <a href="{{ path('app_frontoffice_reclamations') }}" class="nav-link {% if current == 'app_frontoffice_reclamations' %}is-active{% endif %}">Réclamations</a>
