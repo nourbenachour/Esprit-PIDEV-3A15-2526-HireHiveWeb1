@@ -6,8 +6,9 @@ use Doctrine\ORM\Mapping as ORM;
 
 use Doctrine\Common\Collections\Collection;
 use App\Entity\Job_notification;
+use App\Repository\Job_offerRepository;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: Job_offerRepository::class)]
 class Job_offer
 {
 
