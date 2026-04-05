@@ -1,0 +1,2 @@
+﻿
+Fatal error: Allowed memory size of 536870912 bytes exhausted (tried to allocate 243273728 bytes) in C:\Users\dhibm\Downloads\Esprit-PIDEV-3A15-2526-HireHiveWeb1-user\Esprit-PIDEV-3A15-2526-HireHiveWeb1-user\test_db.php on line 24

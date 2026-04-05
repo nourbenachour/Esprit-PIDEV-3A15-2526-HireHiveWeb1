@@ -1,0 +1,450 @@
+{% extends 'user/frontoffice/index.html.twig' %}
+
+{% block title %}Mon Profil - HireHive{% endblock %}
+
+{% block frontoffice_content %}
+<style>
+:root {
+  --accent: #7c3aed;
+  --accent-2: #5b21b6;
+  --border: #e6e0f7;
+  --text: #1f2937;
+  --muted: #4b5563;
+  --bg: #f6f4fb;
+}
+.profile-page { color: var(--text); }
+.profile-scroll { background: var(--bg); padding: 14px; }
+.profile-root { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.profile-header-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.profile-cover { display: flex; gap: 14px; align-items: center; }
+.profile-avatar-shell { width: 96px; height: 96px; display: grid; place-items: center; }
+.profile-avatar-wrapper { width: 88px; height: 88px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border); background: #fff; }
+.profile-avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.profile-name { font-size: 22px; font-weight: 800; color: var(--text); }
+.role-badge { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #f1eafe; color: var(--accent-2); border: 1px solid var(--border); font-weight: 700; }
+.active-chip { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 12px; }
+.active-chip.active { background: #ede9fe; color: var(--accent-2); }
+.active-chip.inactive { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.status-badge { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); background: #f8fafc; font-size: 12px; color: var(--muted); }
+.profile-header-meta { color: var(--muted); font-size: 13px; }
+.profile-info-row, .profile-role-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.profile-section { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.profile-section-title { margin: 0; font-size: 16px; font-weight: 800; color: var(--text); }
+.profile-section-subtitle { margin: 0; color: var(--muted); font-size: 13px; }
+.profile-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.profile-tag { padding: 6px 10px; border-radius: 8px; background: #f8fafc; border: 1px solid var(--border); color: var(--muted); font-size: 13px; }
+.profile-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.profile-page .profile-primary-btn,
+.profile-page .panel-edit,
+.profile-page .primary {
+  background: var(--accent);
+  color: #fff;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-weight: 700;
+}
+.profile-page .profile-secondary-btn,
+.profile-page .secondary {
+  background: #fff;
+  color: var(--accent-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-weight: 700;
+}
+.profile-page .panel-header { display: flex; align-items: center; gap: 8px; }
+.profile-page .panel-header-buttons { display: flex; gap: 8px; margin-left: auto; }
+.profile-list { display: flex; flex-direction: column; gap: 6px; }
+.profile-list-item { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: #f8fafc; }
+.profile-field { display: flex; flex-direction: column; gap: 4px; }
+.profile-field label { font-size: 13px; color: var(--muted); }
+.profile-field input, .profile-field textarea, .profile-field select {
+  border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 14px;
+}
+.profile-field input:focus, .profile-field textarea:focus, .profile-field select:focus {
+  outline: 2px solid rgba(124,58,237,0.18);
+}
+.profile-footer-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.profile-cover { background:#fff !important; border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:none !important; color: var(--text); }
+.profile-header-details { color: var(--text) !important; }
+.profile-header-details .profile-name { color: var(--text) !important; }
+.profile-info-icon { color: var(--muted) !important; }
+.profile-role-row { gap:8px; flex-wrap:wrap; }
+.profile-avatar-glow { display:none; }
+</style>
+</style>
+<div class="profile-scroll">
+  <div class="profile-root profile-page">
+    <form method="post" action="" enctype="multipart/form-data">
+
+    <div class="profile-header-card">
+      <div class="profile-cover">
+        <div class="profile-avatar-shell">
+          <div class="profile-avatar-wrapper">
+            <img
+              id="avatar-img"
+              src="{{ avatar_url|default('https://ui-avatars.com/api/?name=H+H&background=7C3AED&color=fff') }}"
+              alt="Avatar"
+              class="profile-avatar-img"
+            >
+          </div>
+        </div>
+        <div class="profile-header-details">
+          <div class="profile-info-row">
+            <span class="profile-info-icon" style="color:white;">👤</span>
+            <span class="profile-name" style="color:white;">{{ full_name is defined and full_name != '' ? full_name : 'Prénom Nom' }}</span>
+          </div>
+          <div class="profile-role-row" style="gap:8px; flex-wrap:wrap; color:white;">
+            <span class="profile-info-icon" style="color:white;">✉</span>
+            <span class="profile-header-meta" style="color:white;">{{ email|default('Email') }}</span>
+            <span class="profile-info-icon" style="margin-left:14px; color:white;">☎</span>
+            <span class="profile-header-meta" style="color:white;">{{ phone|default('+216 00 000 000') }}</span>
+            <span class="role-badge" style="margin-left:14px;">{{ role|default('CANDIDATE')|upper }}</span>
+            <span class="active-chip {{ is_active ? 'active' : 'inactive' }}">{{ is_active ? 'Compte actif' : 'Compte inactif' }}</span>
+            {% if status is defined and status != '' %}
+              <span class="status-badge status-badge-{{ status|lower|replace({' ':'-','_':'-'}) }}">{{ status|replace({'_':' '})|title }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-layout" style="margin-top:18px; display:flex; gap:24px; flex-wrap:wrap;">
+      <div class="profile-left" style="flex:1; min-width:0;">
+
+        <div class="profile-card compact-card panel" style="padding:0; max-width:720px; margin-bottom:18px;">
+          <div style="background:#fff; border:1px solid #e9d5ff; border-radius:12px; box-shadow:0 8px 18px rgba(109,40,217,0.14); padding:16px;">
+            <header class="panel-header">
+              <div class="panel-title"><span class="panel-icon">🗂️</span> À propos</div>
+              <div class="panel-header-buttons">
+                <button class="panel-edit" id="about-edit-btn" type="button">Modifier</button>
+                <button class="profile-primary-btn" type="submit" name="action" value="save_about" id="about-save-btn" style="display:none;">Enregistrer</button>
+                <button class="profile-secondary-btn" type="button" id="about-cancel-btn" style="display:none;">Annuler</button>
+              </div>
+            </header>
+            <textarea name="about" id="aboutField" class="panel-textarea" rows="4" placeholder="Complétez cette section." data-initial="{{ about|default('') }}" disabled>{{ about|default('') }}</textarea>
+          </div>
+        </div>
+
+        <div class="profile-card compact-card panel" style="padding:0; max-width:720px; margin-bottom:18px;">
+          <div style="background:#fff; border:1px solid #e9d5ff; border-radius:12px; box-shadow:0 8px 18px rgba(109,40,217,0.14); padding:16px;">
+            <header class="panel-header">
+              <div class="panel-title"><span class="panel-icon">💼</span> Expérience</div>
+            </header>
+            <p class="profile-card-text">Vos expériences professionnelles, missions et projets marquants.</p>
+
+            <div class="experience-list" style="display:flex; flex-direction:column; gap:14px;">
+              {% for exp in experiences|default([]) %}
+                <div class="experience-inner-card" style="border:1px solid #e9d5ff; border-radius:12px; padding:14px; box-shadow:0 4px 10px rgba(109,40,217,0.10);">
+                  <div class="form-grid" style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;">
+                    <label class="profile-field">
+                      <span class="profile-field-label">Intitulé</span>
+                      <input type="text" class="form-control" name="exp_title[{{ exp.id }}]" value="{{ exp.title }}" placeholder="Titre du poste">
+                    </label>
+                    <label class="profile-field">
+                      <span class="profile-field-label">Entreprise</span>
+                      <input type="text" class="form-control" name="exp_company[{{ exp.id }}]" value="{{ exp.company }}" placeholder="Entreprise">
+                    </label>
+                    <label class="profile-field">
+                      <span class="profile-field-label">Période</span>
+                      <input type="text" class="form-control" name="exp_period[{{ exp.id }}]" value="{{ exp.period }}" placeholder="2021-2024">
+                    </label>
+                    <label class="profile-field" style="grid-column:1 / -1;">
+                      <span class="profile-field-label">Description</span>
+                      <textarea class="panel-textarea" name="exp_description[{{ exp.id }}]" rows="3">{{ exp.description }}</textarea>
+                    </label>
+                  </div>
+                  <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                    <button type="submit" name="action" value="delete_experience" class="profile-secondary-btn"
+                            onclick="this.form.exp_delete_id.value='{{ exp.id }}';">Supprimer</button>
+                  </div>
+                </div>
+              {% else %}
+                <div class="experience-empty">Aucune expérience enregistrée.</div>
+              {% endfor %}
+            </div>
+
+            <input type="hidden" name="exp_delete_id" value="">
+
+            <div class="experience-inner-card" style="margin-top:16px; border:1px dashed #d8b4fe; border-radius:12px; padding:14px; background:#faf5ff;">
+              <div class="form-grid" style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;">
+                <label class="profile-field">
+                  <span class="profile-field-label">Intitulé</span>
+                  <input type="text" class="form-control" name="exp_new_title" placeholder="Ex : Développeur Full Stack">
+                </label>
+                <label class="profile-field">
+                  <span class="profile-field-label">Entreprise</span>
+                  <input type="text" class="form-control" name="exp_new_company" placeholder="Entreprise">
+                </label>
+                <label class="profile-field">
+                  <span class="profile-field-label">Période</span>
+                  <input type="text" class="form-control" name="exp_new_period" placeholder="2023-2024">
+                </label>
+                <label class="profile-field" style="grid-column:1 / -1;">
+                  <span class="profile-field-label">Description</span>
+                  <textarea class="panel-textarea" name="exp_new_description" rows="3" placeholder="Résumé des missions..."></textarea>
+                </label>
+              </div>
+              <div style="display:flex; justify-content:flex-end;">
+                <button class="profile-primary-btn" type="submit" name="action" value="add_experience">Ajouter cette expérience</button>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+              <button class="profile-primary-btn" type="submit" name="action" value="save_experiences">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-card compact-card panel" style="padding:0; max-width:720px;">
+          <div style="background:#fff; border:1px solid #e9d5ff; border-radius:12px; box-shadow:0 8px 18px rgba(109,40,217,0.14); padding:16px;">
+            <header class="panel-header">
+              <div class="panel-title"><span class="panel-icon">⭐</span> Compétences</div>
+              <div class="panel-header-buttons">
+                <button class="panel-edit" id="competences-edit-btn" type="button">Modifier</button>
+                <button class="profile-primary-btn" id="competences-save-btn" type="submit" name="action" value="save_formations" style="display:none;">Enregistrer</button>
+                <button class="profile-secondary-btn" id="competences-cancel-btn" type="button" style="display:none;">Annuler</button>
+              </div>
+            </header>
+            <p class="profile-card-text">Listez vos compétences techniques et soft skills (séparées par des virgules).</p>
+            <div class="skills-box" id="competencesBox" style="flex-direction:column; gap:8px;">
+              <input type="hidden" name="competences" id="competencesHidden" value="{{ competences_raw|default('') }}">
+              {% set selected = competences_selected|default([]) %}
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                {% for skill in skills_choices|default([]) %}
+                  {% set isChecked = skill in selected %}
+                  <label style="display:flex; align-items:center; gap:4px; background:#f5f3ff; border:1px solid #e4d9ff; border-radius:999px; padding:6px 10px;">
+                    <input type="checkbox" name="competences_multi[]" value="{{ skill }}" class="competence-checkbox" {% if isChecked %}checked{% endif %} disabled>
+                    <span>{{ skill }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-card compact-card panel" style="padding:0; max-width:720px; margin-bottom:18px;">
+          <div style="background:#fff; border:1px solid #e9d5ff; border-radius:12px; box-shadow:0 8px 18px rgba(109,40,217,0.14); padding:16px;">
+            <header class="panel-header">
+              <div class="panel-title"><span class="panel-icon">🎓</span> Formations</div>
+              <div class="panel-header-buttons">
+                <button class="profile-secondary-btn" id="formations-edit-btn" type="button">Modifier</button>
+                <button class="profile-primary-btn" id="formations-save-btn" type="submit" name="action" value="save_formations" style="display:none;">Enregistrer</button>
+                <button class="profile-secondary-btn" id="formations-cancel-btn" type="button" style="display:none;">Annuler</button>
+              </div>
+            </header>
+            <p class="profile-card-text">Diplômes, certifications et formations suivies.</p>
+            <div class="formation-box">
+              <textarea name="formations" id="formationsField" class="panel-textarea" rows="3" placeholder="Licence, Mastère, certifications, bootcamps..." data-initial="{{ formations_text|default('') }}" disabled>{{ formations_text|default('') }}</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-card compact-card panel" style="padding:0; max-width:720px; margin-bottom:18px;">
+          <div style="background:#fff; border:1px solid #e9d5ff; border-radius:12px; box-shadow:0 8px 18px rgba(109,40,217,0.14); padding:16px;">
+            <header class="panel-header">
+              <div class="panel-title"><span class="panel-icon">🧾</span> Informations de compte</div>
+            </header>
+            <div class="form-grid" style="display:flex; flex-direction:column; gap:12px;">
+              <label class="profile-field">
+                <span class="profile-field-label">Prénom</span>
+                <input type="text" name="accountFirstName" class="form-control" value="{{ first_name|default('') }}" placeholder="Votre prénom" data-section="account" data-initial="{{ first_name|default('') }}" disabled>
+              </label>
+              <label class="profile-field">
+                <span class="profile-field-label">Nom</span>
+                <input type="text" name="accountLastName" class="form-control" value="{{ last_name|default('') }}" placeholder="Votre nom" data-section="account" data-initial="{{ last_name|default('') }}" disabled>
+              </label>
+              <label class="profile-field">
+                <span class="profile-field-label">Email</span>
+                <input type="email" name="email" class="form-control" value="{{ email|default('') }}" placeholder="Email" data-section="account" data-initial="{{ email|default('') }}" disabled>
+              </label>
+              <label class="profile-field">
+                <span class="profile-field-label">Téléphone</span>
+                <input type="text" name="phone" class="form-control" value="{{ phone|default('') }}" placeholder="Votre numéro de téléphone" data-section="account" data-initial="{{ phone|default('') }}" disabled>
+              </label>
+              <label class="profile-field">
+                <span class="profile-field-label">Photo de profil (URL ou chemin)</span>
+                <input type="text" name="profilePicture" class="form-control" value="{{ avatar_url|default('') }}" placeholder="Chemin ou URL de la photo" data-section="account" data-initial="{{ avatar_url|default('') }}" disabled>
+              </label>
+              <label class="profile-field">
+                <span class="profile-field-label">Uploader une photo (PNG)</span>
+                <input type="file" name="profilePictureFile" id="profilePictureFile" class="form-control" accept="image/png" data-section="account" disabled>
+              </label>
+            </div>
+            <div class="account-actions" style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+              <button class="profile-secondary-btn" id="account-edit-btn" type="button">Modifier</button>
+              <button class="profile-primary-btn" id="account-save-btn" type="submit" name="action" value="save_account">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="profile-right" style="max-width:720px; margin-top:18px; flex:1; min-width:360px;">
+        <div class="profile-card compact-card panel" style="padding:0;">
+          <div style="background:#fff; border:1px solid #e9d5ff; border-radius:12px; box-shadow:0 8px 18px rgba(109,40,217,0.14); padding:16px;">
+            <header class="panel-header">
+              <div class="panel-title">Découvrez qui recrute</div>
+            </header>
+            <p class="profile-card-text">Ajoutez vos informations pour débloquer des suggestions personnalisées.</p>
+            <hr style="border:none; border-top:1px solid #e9d5ff; margin:12px 0;">
+            <header class="panel-header">
+              <div class="panel-title">Personnes que vous pourriez connaître</div>
+            </header>
+            <p class="profile-card-text">Ajoutez vos infos pour débloquer des suggestions.</p>
+            <div class="experience-empty">Aucune suggestion disponible.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    </form>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const accountFields = Array.from(document.querySelectorAll('[data-section="account"]'));
+  const editBtn = document.getElementById('account-edit-btn');
+  const expForm = document.getElementById('experienceForm');
+  const expCancel = document.getElementById('experience-cancel-btn');
+  const expFields = expForm ? Array.from(expForm.querySelectorAll('input, textarea')) : [];
+  const aboutField = document.getElementById('aboutField');
+  const aboutEdit = document.getElementById('about-edit-btn');
+  const aboutCancel = document.getElementById('about-cancel-btn');
+  const avatarImg = document.getElementById('avatar-img');
+  const avatarFile = document.getElementById('profilePictureFile');
+  const formationsField = document.getElementById('formationsField');
+  const formationsEdit = document.getElementById('formations-edit-btn');
+  const formationsCancel = document.getElementById('formations-cancel-btn');
+  const formationsSave = document.getElementById('formations-save-btn');
+  const competencesHidden = document.getElementById('competencesHidden');
+  const competenceCheckboxes = Array.from(document.querySelectorAll('.competence-checkbox'));
+  const competencesEdit = document.getElementById('competences-edit-btn');
+  const competencesSave = document.getElementById('competences-save-btn');
+  const competencesCancel = document.getElementById('competences-cancel-btn');
+
+  function setAccountEditable(edit) {
+    accountFields.forEach(f => { f.disabled = !edit; });
+  }
+  function resetAccount() {
+    accountFields.forEach(f => { f.value = f.dataset.initial || ''; f.disabled = true; });
+  }
+  function resetExperience() {
+    expFields.forEach(f => { f.value = f.dataset.initial || ''; });
+    if (expForm) { expForm.style.display = 'none'; expForm.classList.add('hidden'); }
+  }
+
+  setAccountEditable(false);
+
+  if (editBtn) {
+    editBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      setAccountEditable(true);
+    });
+  }
+
+  if (expCancel) {
+    expCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetExperience();
+    });
+  }
+
+  if (aboutField) {
+    aboutField.disabled = true;
+  }
+  if (aboutEdit && aboutField) {
+    aboutEdit.addEventListener('click', (e) => {
+      e.preventDefault();
+      aboutField.disabled = false;
+      aboutField.focus();
+      if (aboutEdit) aboutEdit.style.display = 'none';
+      const aboutSave = document.getElementById('about-save-btn');
+      const aboutCancel = document.getElementById('about-cancel-btn');
+      if (aboutSave) aboutSave.style.display = 'inline-flex';
+      if (aboutCancel) aboutCancel.style.display = 'inline-flex';
+    });
+  }
+  if (aboutCancel && aboutField) {
+    aboutCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      aboutField.value = aboutField.dataset.initial || '';
+      aboutField.disabled = true;
+      const aboutSave = document.getElementById('about-save-btn');
+      if (aboutSave) aboutSave.style.display = 'none';
+      if (aboutEdit) aboutEdit.style.display = 'inline-flex';
+      if (aboutCancel) aboutCancel.style.display = 'none';
+    });
+  }
+
+  function setFormationsEditable(on) {
+    if (formationsField) formationsField.disabled = !on;
+    competenceCheckboxes.forEach(cb => cb.disabled = !on);
+    if (formationsSave) formationsSave.style.display = on ? 'inline-flex' : 'none';
+    if (formationsCancel) formationsCancel.style.display = on ? 'inline-flex' : 'none';
+    if (formationsEdit) formationsEdit.style.display = on ? 'none' : 'inline-flex';
+    if (competencesSave) competencesSave.style.display = on ? 'inline-flex' : 'none';
+    if (competencesCancel) competencesCancel.style.display = on ? 'inline-flex' : 'none';
+    if (competencesEdit) competencesEdit.style.display = on ? 'none' : 'inline-flex';
+  }
+  function resetFormations() {
+    if (formationsField) formationsField.value = formationsField.dataset.initial || '';
+    competenceCheckboxes.forEach(cb => cb.checked = cb.hasAttribute('data-initial-checked'));
+    updateCompetencesHidden();
+    setFormationsEditable(false);
+  }
+  setFormationsEditable(false);
+  if (formationsEdit) {
+    formationsEdit.addEventListener('click', (e) => {
+      e.preventDefault();
+      setFormationsEditable(true);
+      formationsField && formationsField.focus();
+    });
+  }
+  if (formationsCancel) {
+    formationsCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetFormations();
+    });
+  }
+
+  competenceCheckboxes.forEach(cb => {
+    if (cb.checked) cb.setAttribute('data-initial-checked','1');
+    cb.addEventListener('change', updateCompetencesHidden);
+  });
+  function updateCompetencesHidden() {
+    const selected = competenceCheckboxes.filter(c => c.checked).map(c => c.value.trim()).filter(Boolean);
+    if (competencesHidden) {
+      competencesHidden.value = selected.join(', ');
+    }
+  }
+  updateCompetencesHidden();
+  if (competencesEdit) {
+    competencesEdit.addEventListener('click', (e) => {
+      e.preventDefault();
+      setFormationsEditable(true);
+    });
+  }
+  if (competencesCancel) {
+    competencesCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetFormations();
+    });
+  }
+
+  if (avatarFile && avatarImg) {
+    avatarFile.addEventListener('change', () => {
+      const file = avatarFile.files && avatarFile.files[0];
+      if (!file) return;
+      if (!file.type.includes('png')) return;
+      const url = URL.createObjectURL(file);
+      avatarImg.src = url;
+    });
+  }
+
+  // Reset account on form submit failure/back navigation could be handled server-side; keep client minimal.
+});
+</script>
+{% endblock %}

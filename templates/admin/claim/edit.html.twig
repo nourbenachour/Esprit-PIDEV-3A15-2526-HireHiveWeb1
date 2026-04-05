@@ -1,0 +1,83 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Éditer la Réclamation #{{ claim.id }} – Backoffice{% endblock %}
+
+{% block backoffice_content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+    <a href="{{ path('app_admin_claim_show', {id: claim.id}) }}" style="color:var(--accent); font-size:13px; font-weight:700; text-decoration:none;">← Retour à la réclamation</a>
+    <h1 class="section-title" style="margin:0;">Éditer la Réclamation</h1>
+</div>
+
+<div class="adm-form-card">
+
+    {# ── Read-only Claim details ── #}
+    <div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:8px; margin-bottom:24px; border:1px solid var(--border);">
+        <h2 style="font-size:16px; margin:0 0 10px; color:#fff;">Détails de la réclamation</h2>
+        <div style="font-size:13px; color:var(--muted); line-height:1.6;">
+            <strong>Titre :</strong> {{ claim.title }} <br>
+            <strong>Type :</strong> {{ claim.type }} <br>
+            <strong>Priorité :</strong>
+            <span class="adm-badge priority-badge-{{ claim.priority|lower }}" style="vertical-align:middle; margin-left:4px;">
+                {% if claim.priority == 'URGENT' %}Urgente{% elseif claim.priority == 'MEDIUM' %}Moyenne{% else %}Basse{% endif %}
+            </span><br>
+            <strong>Date :</strong> {{ claim.created_at|date('d/m/Y H:i') }} <br>
+            <strong>Utilisateur ID :</strong> #{{ claim.user_id }} <br>
+            <div style="margin-top:8px; padding:12px; background:#0f172a; border-radius:6px; color:var(--text); border:1px solid var(--border);">
+                {{ claim.description|nl2br }}
+            </div>
+        </div>
+    </div>
+
+    <form method="POST">
+        
+        {# ── Status (admin-only field) ── #}
+        <div class="field-group">
+            <label for="claim_status">Statut de la Réclamation</label>
+            <select id="claim_status" name="claim_status" class="adm-input" required style="max-width:300px;">
+                <option value="OPEN" {% if claim.status == 'OPEN' %}selected{% endif %}>Ouvert</option>
+                <option value="IN_PROGRESS" {% if claim.status == 'IN_PROGRESS' %}selected{% endif %}>En cours</option>
+                <option value="RESOLVED" {% if claim.status == 'RESOLVED' %}selected{% endif %}>Résolu</option>
+                <option value="CLOSED" {% if claim.status == 'CLOSED' %}selected{% endif %}>Fermé</option>
+            </select>
+        </div>
+
+        {# ── Priority ── #}
+        <div class="field-group" style="margin-top:16px;">
+            <label for="claim_priority">Priorité de la Réclamation</label>
+            <select id="claim_priority" name="claim_priority" class="adm-input" required style="max-width:300px;">
+                <option value="LOW" {% if claim.priority == 'LOW' %}selected{% endif %}>Basse</option>
+                <option value="MEDIUM" {% if claim.priority == 'MEDIUM' %}selected{% endif %}>Moyenne</option>
+                <option value="URGENT" {% if claim.priority == 'URGENT' %}selected{% endif %}>Urgente</option>
+            </select>
+        </div>
+
+        {# ── New Response (Saves to claim_response table) ── #}
+        <div class="field-group" style="margin-top:24px;">
+            <label for="claim_response">Ajouter une réponse officielle (Optionnel)</label>
+            <textarea id="claim_response" name="claim_response" class="adm-textarea" 
+                      placeholder="Tapez ici votre réponse pour le client. Elle sera enregistrée dans l'historique..."></textarea>
+            <small style="color:var(--muted); font-size:12px;">Cela créera une nouvelle entrée dans la table <code>claim_response</code>.</small>
+        </div>
+
+        <div style="display:flex; gap:12px; align-items:center; margin-top:24px;">
+            <button type="submit" class="adm-btn-primary">Enregistrer la mise à jour</button>
+            <a href="{{ path('app_admin_claim_show', {id: claim.id}) }}" style="color:var(--muted); font-size:13px; text-decoration:none;">Annuler</a>
+        </div>
+
+    </form>
+</div>
+
+<style>
+.adm-form-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 680px; }
+.field-group { margin-bottom: 20px; }
+.field-group label { display: block; font-weight: 700; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.adm-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: #0f172a; color: var(--text); }
+.adm-input:focus { outline: none; border-color: var(--accent); }
+.adm-textarea { resize: vertical; min-height: 120px; }
+.field-errors { margin-top: 6px; }
+.error-msg { display: block; color: #fca5a5; font-size: 13px; font-weight: 600; background: #450a0a; padding: 5px 10px; border-radius: 6px; margin-top: 4px; border: 1px solid #7f1d1d; }
+.adm-btn-primary { background: var(--accent); color: #fff; padding: 10px 22px; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.adm-btn-primary:hover { background: #5b21b6; }
+</style>
+{% endblock %}

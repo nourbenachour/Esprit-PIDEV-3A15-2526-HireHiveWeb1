@@ -1,0 +1,11 @@
+﻿CREATE TABLE `claim_response` (
+  `id_response` bigint(20) NOT NULL AUTO_INCREMENT,
+  `claim_id` bigint(20) DEFAULT NULL,
+  `responder_id` bigint(20) DEFAULT NULL,
+  `message` longtext NOT NULL,
+  `internal_notes` longtext NOT NULL,
+  `created_at` datetime NOT NULL,
+  PRIMARY KEY (`id_response`),
+  KEY `IDX_FF8BEDBF7096A49F` (`claim_id`),
+  CONSTRAINT `fk_response_claim` FOREIGN KEY (`claim_id`) REFERENCES `claim` (`id_claim`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci

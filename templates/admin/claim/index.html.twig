@@ -1,0 +1,210 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Toutes les Réclamations – Backoffice{% endblock %}
+
+{% block backoffice_content %}
+<div class="adm-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div>
+        <h1 class="section-title">Tableau de bord des Réclamations</h1>
+        <p style="color:var(--muted); font-size:14px; margin:4px 0 20px;">
+            Vue globale des réclamations avec répartition par statut.
+        </p>
+    </div>
+    <a href="{{ path('app_admin_claim_new') }}" class="adm-btn-primary" style="margin-top:10px; background:var(--accent); color:#fff; padding:10px 20px; border-radius:8px; font-weight:700; text-decoration:none;">+ Ajouter une Réclamation</a>
+</div>
+
+{# ── Stats Strip ── #}
+<div class="stats-strip">
+    <div class="stat-card stat-total">
+        <div class="stat-num">{{ total }}</div>
+        <div class="stat-label">Total</div>
+    </div>
+    {% for status, count in statsByStatus %}
+        {% set status_display = status %}
+        {% if status == 'OPEN' %}{% set status_display = 'OUVERT' %}{% endif %}
+        {% if status == 'IN_PROGRESS' %}{% set status_display = 'EN COURS' %}{% endif %}
+        {% if status == 'RESOLVED' %}{% set status_display = 'RÉSOLU' %}{% endif %}
+        {% if status == 'CLOSED' %}{% set status_display = 'FERMÉ' %}{% endif %}
+
+        <div class="stat-card stat-{{ status|lower|replace({'_': '-'}) }}">
+            <div class="stat-num">{{ count }}</div>
+            <div class="stat-label">{{ status_display }}</div>
+        </div>
+    {% endfor %}
+</div>
+
+{# ── Visual Bar Chart (pure CSS, no JS) ── #}
+<div class="chart-section">
+    <h2 class="section-title" style="margin-bottom:16px;">Réclamations par Statut</h2>
+    {% if total > 0 %}
+        <div class="bar-chart">
+            {% for status, count in statsByStatus %}
+                {% set pct = ((count / total) * 100)|round(1) %}
+                {% set status_display = status %}
+                {% if status == 'OPEN' %}{% set status_display = 'Ouvert' %}{% endif %}
+                {% if status == 'IN_PROGRESS' %}{% set status_display = 'En cours' %}{% endif %}
+                {% if status == 'RESOLVED' %}{% set status_display = 'Résolu' %}{% endif %}
+                {% if status == 'CLOSED' %}{% set status_display = 'Fermé' %}{% endif %}
+
+                <div class="bar-row">
+                    <span class="bar-label">{{ status_display }}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill bar-{{ status|lower|replace({'_': '-'}) }}"
+                             style="width: {{ pct }}%;">
+                            <span class="bar-value">{{ count }}</span>
+                        </div>
+                    </div>
+                    <span class="bar-pct">{{ pct }}%</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">Aucune réclamation dans la base de données.</div>
+    {% endif %}
+</div>
+
+{# ── Table of Claims ── #}
+<div class="table-section">
+    <h2 class="section-title" style="margin-bottom:16px;">Liste des Réclamations</h2>
+    {% if claims is empty and app.request.query.all is empty %}
+        <div class="empty">Aucune réclamation n'a été soumise pour le moment.</div>
+    {% else %}
+        {# ── Search / Filter Bar ── #}
+        <div class="filters-container" style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+            <input type="text" id="filter-search" class="adm-input" placeholder="Rechercher (Titre, ID User...)" style="flex:1; min-width:200px; padding:10px 14px; border:1px solid var(--border); border-radius:8px; background:#0f172a; color:var(--text);">
+            
+            <select id="filter-status" class="adm-select" style="padding:10px 14px; border:1px solid var(--border); border-radius:8px; background:#0f172a; color:var(--text);">
+                <option value="">Tous les statuts</option>
+                <option value="OPEN">Ouvert</option>
+                <option value="IN_PROGRESS">En cours</option>
+                <option value="RESOLVED">Résolu</option>
+                <option value="CLOSED">Fermé</option>
+            </select>
+
+            <select id="filter-priority" class="adm-select" style="padding:10px 14px; border:1px solid var(--border); border-radius:8px; background:#0f172a; color:var(--text);">
+                <option value="">Toutes les priorités</option>
+                <option value="URGENT">Urgente</option>
+                <option value="MEDIUM">Moyenne</option>
+                <option value="LOW">Basse</option>
+            </select>
+        </div>
+
+        <div class="adm-table-container">
+            <table class="adm-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Titre / Description</th>
+                        <th>Type</th>
+                        <th>Utilisateur</th>
+                        <th>Priorité</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="claims-table-body">
+                    {{ include('admin/claim/_table_body.html.twig') }}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.adm-header { margin-bottom: 4px; }
+.stats-strip { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 28px; }
+.stat-card { flex: 1 1 120px; background: #0f172a; border: 1px solid var(--border); border-radius: 12px; padding: 18px 16px; min-width: 100px; }
+.stat-total { border-color: var(--accent); }
+.stat-num { font-size: 32px; font-weight: 900; color: var(--text); line-height: 1; }
+.stat-label { font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+.stat-open .stat-num { color: #60a5fa; }
+.stat-in-progress .stat-num, .stat-in_progress .stat-num { color: #fde68a; }
+.stat-resolved .stat-num { color: #34d399; }
+.stat-closed .stat-num { color: #9ca3af; }
+.chart-section { margin-bottom: 32px; }
+.bar-chart { display: flex; flex-direction: column; gap: 12px; }
+.bar-row { display: flex; align-items: center; gap: 12px; }
+.bar-label { min-width: 100px; font-size: 13px; font-weight: 700; color: var(--text); text-align: right; }
+.bar-track { flex: 1; background: var(--border); border-radius: 999px; height: 28px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; display: flex; align-items: center; padding-left: 10px; font-size: 13px; font-weight: 700; color: #fff; min-width: 30px; transition: width .5s ease; }
+.bar-open { background: #3b82f6; }
+.bar-in-progress, .bar-in_progress { background: #d97706; }
+.bar-resolved { background: #10b981; }
+.bar-closed { background: #6b7280; }
+.bar-pct { min-width: 46px; font-size: 13px; color: var(--muted); font-weight: 700; }
+
+.table-section { margin-top: 20px; }
+.adm-table-container { overflow-x: auto; background: #0f172a; border: 1px solid var(--border); border-radius: 12px; }
+.adm-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.adm-table th { text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--muted); font-weight: 700; background: rgba(0,0,0,0.2); }
+.adm-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+.adm-table tr:last-child td { border-bottom: none; }
+.adm-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+.adm-btn-xs { padding: 5px 10px; background: rgba(124,58,237,.15); color: var(--accent); border-radius: 5px; font-size: 12px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; display: inline-block; }
+.adm-btn-xs:hover { background: rgba(124,58,237,.3); }
+.adm-btn-edit { background: rgba(234,179,8,.15); color: #fde68a; }
+.adm-btn-edit:hover { background: rgba(234,179,8,.3); }
+.adm-btn-del { background: rgba(239,68,68,.15); color: #fca5a5; }
+.adm-btn-del:hover { background: rgba(239,68,68,.3); }
+
+.adm-badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.priority-badge-high { background: #450a0a; color: #fca5a5; }
+.priority-badge-normal { background: #1e1b4b; color: #a5b4fc; }
+.status-badge-open { background: #1e3a5f; color: #93c5fd; }
+.status-badge-in-progress { background: #451a03; color: #fcd34d; }
+.status-badge-resolved { background: #052e16; color: #86efac; }
+.status-badge-closed { background: #111827; color: #9ca3af; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('filter-search');
+    const statusSelect = document.getElementById('filter-status');
+    const prioritySelect = document.getElementById('filter-priority');
+    const tbody = document.getElementById('claims-table-body');
+
+    if (!searchInput || !tbody) return;
+
+    function fetchClaims() {
+        const q = searchInput.value;
+        const status = statusSelect.value;
+        const priority = prioritySelect.value;
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('q', q);
+        url.searchParams.set('status', status);
+        url.searchParams.set('priority', priority);
+
+        // Add visual loading state
+        tbody.style.opacity = '0.5';
+
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            tbody.innerHTML = html;
+            tbody.style.opacity = '1';
+        })
+        .catch(err => {
+            console.error('AJAX Error:', err);
+            tbody.style.opacity = '1';
+        });
+    }
+
+    // Use debounce for text input so we don't spam the server on every keystroke
+    let timeout = null;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(fetchClaims, 300);
+    });
+
+    statusSelect.addEventListener('change', fetchClaims);
+    prioritySelect.addEventListener('change', fetchClaims);
+});
+</script>
+{% endblock %}

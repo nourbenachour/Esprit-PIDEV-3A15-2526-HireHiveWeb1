@@ -1,0 +1,203 @@
+﻿Field Mappings:
+Array
+(
+    [id_response] => Doctrine\ORM\Mapping\FieldMapping Object
+        (
+            [length] => 
+            [id] => 1
+            [nullable] => 
+            [notInsertable] => 
+            [notUpdatable] => 
+            [columnDefinition] => 
+            [generated] => 
+            [enumType] => 
+            [precision] => 
+            [scale] => 
+            [unique] => 
+            [index] => 
+            [inherited] => 
+            [originalClass] => 
+            [originalField] => 
+            [quoted] => 
+            [declared] => 
+            [declaredField] => 
+            [options] => 
+            [version] => 
+            [default] => 
+            [type] => bigint
+            [fieldName] => id_response
+            [columnName] => id_response
+        )
+
+    [responder_id] => Doctrine\ORM\Mapping\FieldMapping Object
+        (
+            [length] => 
+            [id] => 
+            [nullable] => 1
+            [notInsertable] => 
+            [notUpdatable] => 
+            [columnDefinition] => 
+            [generated] => 
+            [enumType] => 
+            [precision] => 
+            [scale] => 
+            [unique] => 
+            [index] => 
+            [inherited] => 
+            [originalClass] => 
+            [originalField] => 
+            [quoted] => 
+            [declared] => 
+            [declaredField] => 
+            [options] => 
+            [version] => 
+            [default] => 
+            [type] => bigint
+            [fieldName] => responder_id
+            [columnName] => responder_id
+        )
+
+    [message] => Doctrine\ORM\Mapping\FieldMapping Object
+        (
+            [length] => 
+            [id] => 
+            [nullable] => 
+            [notInsertable] => 
+            [notUpdatable] => 
+            [columnDefinition] => 
+            [generated] => 
+            [enumType] => 
+            [precision] => 
+            [scale] => 
+            [unique] => 
+            [index] => 
+            [inherited] => 
+            [originalClass] => 
+            [originalField] => 
+            [quoted] => 
+            [declared] => 
+            [declaredField] => 
+            [options] => 
+            [version] => 
+            [default] => 
+            [type] => text
+            [fieldName] => message
+            [columnName] => message
+        )
+
+    [internal_notes] => Doctrine\ORM\Mapping\FieldMapping Object
+        (
+            [length] => 
+            [id] => 
+            [nullable] => 
+            [notInsertable] => 
+            [notUpdatable] => 
+            [columnDefinition] => 
+            [generated] => 
+            [enumType] => 
+            [precision] => 
+            [scale] => 
+            [unique] => 
+            [index] => 
+            [inherited] => 
+            [originalClass] => 
+            [originalField] => 
+            [quoted] => 
+            [declared] => 
+            [declaredField] => 
+            [options] => 
+            [version] => 
+            [default] => 
+            [type] => text
+            [fieldName] => internal_notes
+            [columnName] => internal_notes
+        )
+
+    [created_at] => Doctrine\ORM\Mapping\FieldMapping Object
+        (
+            [length] => 
+            [id] => 
+            [nullable] => 
+            [notInsertable] => 
+            [notUpdatable] => 
+            [columnDefinition] => 
+            [generated] => 
+            [enumType] => 
+            [precision] => 
+            [scale] => 
+            [unique] => 
+            [index] => 
+            [inherited] => 
+            [originalClass] => 
+            [originalField] => 
+            [quoted] => 
+            [declared] => 
+            [declaredField] => 
+            [options] => 
+            [version] => 
+            [default] => 
+            [type] => datetime
+            [fieldName] => created_at
+            [columnName] => created_at
+        )
+
+)
+Association Mappings:
+Array
+(
+    [claim_id] => Doctrine\ORM\Mapping\ManyToOneAssociationMapping Object
+        (
+            [cascade] => Array
+                (
+                )
+
+            [fetch] => 2
+            [inherited] => 
+            [declared] => 
+            [cache] => 
+            [id] => 
+            [isOnDeleteCascade] => 
+            [originalClass] => 
+            [originalField] => 
+            [orphanRemoval] => 
+            [unique] => 
+            [fieldName] => claim_id
+            [sourceEntity] => App\Entity\Claim_response
+            [targetEntity] => App\Entity\Claim
+            [inversedBy] => claim_responses
+            [sourceToTargetKeyColumns] => Array
+                (
+                    [claim_id] => id_claim
+                )
+
+            [targetToSourceKeyColumns] => Array
+                (
+                    [id_claim] => claim_id
+                )
+
+            [joinColumns] => Array
+                (
+                    [0] => Doctrine\ORM\Mapping\JoinColumnMapping Object
+                        (
+                            [deferrable] => 
+                            [unique] => 
+                            [quoted] => 
+                            [fieldName] => 
+                            [onDelete] => CASCADE
+                            [columnDefinition] => 
+                            [nullable] => 1
+                            [options] => 
+                            [name] => claim_id
+                            [referencedColumnName] => id_claim
+                        )
+
+                )
+
+            [joinColumnFieldNames] => Array
+                (
+                    [claim_id] => claim_id
+                )
+
+        )
+
+)

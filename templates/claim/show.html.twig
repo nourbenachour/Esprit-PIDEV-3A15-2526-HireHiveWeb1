@@ -1,0 +1,132 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ claim.title }} – Ma Réclamation{% endblock %}
+
+{% block content %}
+<div class="show-page">
+
+    <a href="{{ path('app_claim_index') }}" class="back-link">← Retour à mes réclamations</a>
+
+    {# ── Claim Details Card ── #}
+    <div class="detail-card priority-{{ claim.priority|lower }}">
+        <div class="detail-top">
+            <span class="badge-status status-{{ claim.status|lower|replace({'_': '-'}) }}">
+                {% if claim.status == 'OPEN' %}Ouvert
+                {% elseif claim.status == 'IN_PROGRESS' %}En cours
+                {% elseif claim.status == 'RESOLVED' %}Résolu
+                {% else %}Fermé{% endif %}
+            </span>
+            {% if claim.priority == 'URGENT' %}
+                <span class="badge-priority">PRIORITÉ URGENTE</span>
+            {% endif %}
+            <span class="detail-type">{{ claim.type }}</span>
+        </div>
+
+        <h1 class="detail-title">{{ claim.title }}</h1>
+        <p class="detail-date">Soumise le {{ claim.created_at|date('d/m/Y à H:i') }}</p>
+        <div class="detail-description">{{ claim.description }}</div>
+
+        {% if claim.status == 'OPEN' %}
+        <div class="detail-actions">
+            <a href="{{ path('app_claim_edit', {id: claim.id}) }}" class="btn-sm btn-edit">Éditer</a>
+            <form method="post" action="{{ path('app_claim_delete', {id: claim.id}) }}"
+                  onsubmit="return confirm('Supprimer définitivement cette réclamation ?');" style="display:inline">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ claim.id) }}">
+                <button type="submit" class="btn-sm btn-delete">Supprimer</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── Responses (Threaded Chat) ── #}
+    <div class="responses-section">
+        <h2 class="responses-title">
+            Discussion du ticket
+            <span class="response-count">{{ responses|length }}</span>
+        </h2>
+
+        <div class="chat-container">
+            {% if responses is empty %}
+                <div class="no-response" style="margin-bottom:20px;">Aucun message pour le moment. L'historique des échanges apparaîtra ici.</div>
+            {% else %}
+                {% for resp in responses %}
+                    {% set isClient = (resp.responder_id == claim.user_id) %}
+                    <div class="chat-bubble {{ isClient ? 'chat-client' : 'chat-support' }}">
+                        <div class="chat-meta">
+                            <span class="chat-author">{{ isClient ? 'Vous' : 'Support Technique' }}</span>
+                            <span class="chat-date">{{ resp.created_at|date('d/m/Y H:i') }}</span>
+                        </div>
+                        <p class="chat-message">{{ resp.message|nl2br }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {# Reply Form #}
+            {% if claim.status != 'CLOSED' %}
+                <div class="chat-reply-box">
+                    <h3 style="font-size:14px; margin-top:0; margin-bottom:12px; color:#374151;">Ajouter un message</h3>
+                    {{ form_start(responseForm, {'action': path('app_claim_reply', {id: claim.id})}) }}
+                        <div class="field-group" style="margin-bottom:12px;">
+                            {{ form_widget(responseForm.message, {'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Écrivez votre réponse ici...'}}) }}
+                            {% if responseForm.message.vars.errors|length > 0 %}
+                                <div class="field-errors">
+                                    {% for error in responseForm.message.vars.errors %}
+                                        <span class="error-msg">! {{ error.message }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn-submit" style="padding:10px 24px;">Envoyer</button>
+                    {{ form_end(responseForm) }}
+                </div>
+            {% else %}
+                <div class="no-response" style="margin-top:20px; background:#f3f4f6; color:#6b7280; border:none;">Le ticket est fermé. L'envoi de messages est désactivé.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<style>
+.show-page { max-width: 760px; margin: 0 auto; }
+.back-link { color: #7c3aed; font-size: 13px; text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 20px; }
+.back-link:hover { text-decoration: underline; }
+.detail-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 24px; margin-bottom: 28px; }
+.detail-card.priority-high { border-left: 5px solid #ef4444; }
+.detail-card.priority-normal { border-left: 5px solid #7c3aed; }
+.detail-top { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.badge-status { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.status-open { background: #dbeafe; color: #1e40af; }
+.status-in-progress { background: #fef9c3; color: #92400e; }
+.status-resolved { background: #dcfce7; color: #14532d; }
+.status-closed { background: #f3f4f6; color: #374151; }
+.badge-priority { background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.detail-type { color: #7c3aed; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.detail-title { font-size: 22px; font-weight: 800; color: #111827; margin: 0 0 6px; }
+.detail-date { color: #9ca3af; font-size: 13px; margin: 0 0 14px; }
+.detail-description { color: #374151; font-size: 15px; line-height: 1.7; white-space: pre-wrap; background: #fafafa; border-radius: 8px; padding: 14px; border: 1px solid #f3f4f6; margin-bottom: 16px; }
+.detail-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-sm { padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-edit { background: #fef9c3; color: #92400e; }
+.btn-delete { background: #fee2e2; color: #991b1b; }
+.btn-sm:hover { filter: brightness(.9); }
+.responses-section { }
+.responses-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 16px; }
+.response-count { background: #7c3aed; color: #fff; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.no-response { color: #9ca3af; background: #fafafa; border: 1px dashed #e5e7eb; border-radius: 10px; padding: 24px; text-align: center; font-size: 14px; }
+.chat-container { display:flex; flex-direction:column; gap:16px; margin-bottom:40px; }
+.chat-bubble { width: 85%; padding: 14px 18px; border-radius: 12px; }
+.chat-client { align-self: flex-end; background: #7c3aed; color: #fff; border-bottom-right-radius: 2px; }
+.chat-client .chat-meta { color: #d8b4fe; }
+.chat-support { align-self: flex-start; background: #f3f4f6; color: #111827; border-bottom-left-radius: 2px; border: 1px solid #e5e7eb; }
+.chat-support .chat-meta { color: #6b7280; }
+.chat-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px; opacity: 0.9; flex-wrap:wrap; gap:6px; }
+.chat-author { font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.chat-message { margin: 0; line-height: 1.6; font-size: 14px; }
+.chat-reply-box { margin-top: 10px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; border-top: 4px solid #7c3aed; }
+.form-control { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; font-family: inherit; background: #fafafa; color: #111827; transition: border-color .2s; }
+.form-control:focus { outline: none; border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,.12); background: #fff; }
+.field-errors { margin-top: 6px; }
+.error-msg { display: block; color: #b91c1c; font-size: 13px; font-weight: 600; background: #fee2e2; padding: 5px 10px; border-radius: 6px; margin-top: 4px; border: 1px solid #fecaca; }
+</style>
+{% endblock %}

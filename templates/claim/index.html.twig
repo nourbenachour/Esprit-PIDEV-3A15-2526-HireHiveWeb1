@@ -1,0 +1,100 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes Réclamations – HireHive{% endblock %}
+
+{% block content %}
+<div class="claim-page">
+
+    <div class="claim-header">
+        <div>
+            <h1 class="claim-h1">Mes Réclamations</h1>
+            <p class="claim-sub">Suivez et gérez vos demandes d'assistance</p>
+        </div>
+        <a href="{{ path('app_claim_new') }}" class="btn-primary">
+            + Nouvelle Réclamation
+        </a>
+    </div>
+
+    {% if claims is empty %}
+        <div class="empty-state">
+            <p>Vous n'avez aucune réclamation pour le moment.</p>
+            <a href="{{ path('app_claim_new') }}" class="btn-primary">Soumettre votre première réclamation</a>
+        </div>
+    {% else %}
+        <div class="claims-grid">
+            {% for claim in claims %}
+                <div class="claim-card priority-{{ claim.priority|lower }}">
+                    <div class="claim-card-top">
+                        <span class="badge-status status-{{ claim.status|lower|replace({'_': '-'}) }}">
+                            {% if claim.status == 'OPEN' %}Ouvert
+                            {% elseif claim.status == 'IN_PROGRESS' %}En cours
+                            {% elseif claim.status == 'RESOLVED' %}Résolu
+                            {% else %}Fermé{% endif %}
+                        </span>
+                        {% if claim.priority == 'HIGH' %}
+                            <span class="badge-priority">PRIORITÉ HAUTE</span>
+                        {% endif %}
+                    </div>
+
+                    <h2 class="claim-title">{{ claim.title }}</h2>
+                    <p class="claim-type">{{ claim.type }}</p>
+                    <p class="claim-desc">{{ claim.description|slice(0, 120) }}{% if claim.description|length > 120 %}…{% endif %}</p>
+
+                    <div class="claim-meta">
+                        <span>Le {{ claim.created_at|date('d/m/Y') }}</span>
+                        <span>{{ claim.claim_responses|length }} réponse(s)</span>
+                    </div>
+
+                    <div class="claim-actions">
+                        <a href="{{ path('app_claim_show', {id: claim.id}) }}" class="btn-sm btn-view">Voir</a>
+                        {% if claim.claim_responses|length > 0 %}
+                            <span class="btn-sm" style="background:#f3f4f6; color:#9ca3af; cursor:not-allowed;" title="Verrouillé : l'administration a déjà répondu">🔒 Éditer</span>
+                        {% else %}
+                            <a href="{{ path('app_claim_edit', {id: claim.id}) }}" class="btn-sm btn-edit">Éditer</a>
+                        {% endif %}
+                        <form method="post" action="{{ path('app_claim_delete', {id: claim.id}) }}"
+                              onsubmit="return confirm('Confirmer la suppression ?');" style="display:inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ claim.id) }}">
+                            <button type="submit" class="btn-sm btn-delete">Supprimer</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+</div>
+
+<style>
+.claim-page { max-width: 900px; margin: 0 auto; }
+.claim-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+.claim-h1 { margin: 0; font-size: 26px; font-weight: 800; color: #7c3aed; }
+.claim-sub { margin: 4px 0 0; color: #6b7280; font-size: 14px; }
+.btn-primary { background: #7c3aed; color: #fff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 14px; }
+.btn-primary:hover { background: #5b21b6; }
+.empty-state { text-align: center; padding: 60px 20px; border: 2px dashed #e0d9f7; border-radius: 16px; color: #9ca3af; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.claims-grid { display: flex; flex-direction: column; gap: 16px; }
+.claim-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; transition: box-shadow .2s; }
+.claim-card:hover { box-shadow: 0 4px 20px rgba(124,58,237,.12); }
+.claim-card.priority-high { border-left: 4px solid #ef4444; }
+.claim-card.priority-normal { border-left: 4px solid #7c3aed; }
+.claim-card-top { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.badge-status { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.status-open { background: #dbeafe; color: #1e40af; }
+.status-in-progress { background: #fef9c3; color: #92400e; }
+.status-resolved { background: #dcfce7; color: #14532d; }
+.status-closed { background: #f3f4f6; color: #374151; }
+.badge-priority { background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.claim-title { margin: 0 0 4px; font-size: 18px; font-weight: 700; color: #111827; }
+.claim-type { margin: 0 0 8px; font-size: 12px; color: #7c3aed; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+.claim-desc { color: #6b7280; font-size: 14px; margin: 0 0 14px; line-height: 1.5; }
+.claim-meta { display: flex; gap: 16px; font-size: 13px; color: #9ca3af; margin-bottom: 14px; flex-wrap: wrap; }
+.claim-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-sm { padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+.btn-view { background: #ede9fe; color: #5b21b6; }
+.btn-edit { background: #fef9c3; color: #92400e; }
+.btn-delete { background: #fee2e2; color: #991b1b; }
+.btn-sm:hover { filter: brightness(.92); }
+</style>
+{% endblock %}

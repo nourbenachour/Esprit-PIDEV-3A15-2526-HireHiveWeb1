@@ -1,0 +1,29 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}{{ section_title ?? 'Section' }} - Backoffice{% endblock %}
+
+{% block backoffice_content %}
+<style>
+    .section-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        color: var(--text);
+    }
+    .section-card h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+    }
+    .section-card p {
+        margin: 0 0 16px;
+        color: var(--muted);
+        font-size: 14px;
+    }
+</style>
+<div class="section-card">
+    <h2>{{ section_title ?? 'Section' }}</h2>
+    <p>{{ section_description ?? 'Contenu à venir.' }}</p>
+    <p style="margin:0; color:var(--muted); font-size:13px;">Aucune donnée disponible pour le moment.</p>
+</div>
+{% endblock %}

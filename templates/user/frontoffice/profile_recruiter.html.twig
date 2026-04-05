@@ -1,0 +1,196 @@
+{% extends 'user/frontoffice/index.html.twig' %}
+
+{% block title %}Profil Recruteur - HireHive{% endblock %}
+
+{% block frontoffice_content %}
+<div class="recruiter-page">
+  <form method="post" action="" id="recruiter-form" enctype="multipart/form-data">
+    <div class="recruiter-hero">
+      <div class="recruiter-hero-left">
+        <div class="recruiter-logo-wrap">
+          {% set logoSrc = recruiter.company_logo|default('') %}
+          {% if logoSrc %}
+            <img src="{{ logoSrc }}" alt="Logo" class="recruiter-logo" id="company-logo-img">
+          {% else %}
+            <div class="recruiter-logo placeholder" id="company-logo-placeholder">Logo</div>
+          {% endif %}
+        </div>
+        <div>
+          <h2 class="recruiter-name">{{ recruiter.company_name|default('Entreprise') }}</h2>
+          <p class="recruiter-sector">{{ recruiter.company_sector|default(sector|default('Secteur non renseigné')) }}</p>
+        </div>
+      </div>
+      <div class="recruiter-hero-right">
+        <div class="chip">{{ status|default('USER_VERIFIED')|replace({'_':' '})|title }}</div>
+        <div class="chip {{ is_active ? 'ok' : 'ko' }}">{{ is_active ? 'Actif' : 'Inactif' }}</div>
+      </div>
+    </div>
+
+    <div class="recruiter-grid">
+      <section class="card">
+        <header><span>🏢</span> Identité</header>
+        <label>Nom entreprise
+          <input type="text" name="company_name" value="{{ recruiter.company_name|default('') }}" disabled>
+        </label>
+        <label>Logo (URL)
+          <input type="text" name="company_logo" value="{{ recruiter.company_logo|default('') }}" disabled id="company-logo-input">
+        </label>
+        <label>Importer un logo
+          <input type="file" name="company_logo_file" accept="image/png" disabled id="company-logo-file">
+        </label>
+        <label>Bio
+          <textarea name="company_bio" rows="3" disabled>{{ recruiter.company_bio|default('') }}</textarea>
+        </label>
+      </section>
+
+      <section class="card">
+        <header><span>🌐</span> Détails</header>
+        <label>Site web
+          <input type="text" name="company_website" value="{{ recruiter.company_website|default('') }}" disabled>
+        </label>
+        <label>Secteur d'activité
+          <input type="text" name="secteur_activite" value="{{ recruiter.company_sector|default('') }}" disabled>
+        </label>
+        <label>Adresse
+          <input type="text" name="adresse" value="{{ recruiter.company_address|default('') }}" disabled>
+        </label>
+      </section>
+
+      <section class="card">
+        <header><span>📞</span> Contacts & Budget</header>
+        <label>Email contact
+          <input type="text" name="email_contact" value="{{ recruiter.company_contact_email|default(email|default('')) }}" disabled>
+        </label>
+        <label>Téléphone service client
+          <input type="text" name="telephone_service" value="{{ recruiter.company_contact_phone|default(phone|default('')) }}" disabled>
+        </label>
+        <label>Budget / Salaires
+          <input type="text" name="salaires" value="{{ recruiter.company_salaries|default(0) }}" disabled>
+        </label>
+      </section>
+
+      <section class="card">
+        <header><span>📊</span> Statistiques (placeholder)</header>
+        <p>Vues du profil : {{ recruiter_profile_views|default(0) }}</p>
+        <p>Offres actives : {{ active_offers|default(0) }}</p>
+        <p>Candidatures ce mois : {{ applications_month|default(0) }}</p>
+      </section>
+    </div>
+
+    <div class="recruiter-actions">
+      <button class="primary edit-btn" type="button">Modifier</button>
+      <button class="primary save-btn" type="submit" name="action" value="save_recruiter">Enregistrer</button>
+      <button class="secondary cancel-btn" type="button">Annuler</button>
+    </div>
+  </form>
+</div>
+
+<style>
+.recruiter-page{max-width:1200px;margin:0 auto;padding:20px 10px;}
+.recruiter-hero{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-radius:14px;background:#f4f0fb;color:#1f2937;margin-bottom:16px;border:1px solid #e6e0f7;}
+.recruiter-hero-left{display:flex;gap:14px;align-items:center;}
+.recruiter-logo-wrap{width:70px;height:70px;border-radius:14px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;border:1px solid #e6e0f7;}
+.recruiter-logo{width:100%;height:100%;object-fit:cover;}
+.recruiter-logo.placeholder{color:#7c3aed;font-weight:600;}
+.recruiter-name{margin:0;font-size:22px;font-weight:700;color:#1f2937;}
+.recruiter-sector{margin:2px 0 0;font-size:13px;color:#4b5563;}
+.recruiter-hero-right{display:flex;gap:8px;}
+.chip{padding:6px 10px;border-radius:999px;font-size:12px;background:#f8fafc;border:1px solid #e6e0f7;color:#4b5563;}
+.chip.ok{background:#f1eafe;border-color:#e6e0f7;color:#7c3aed;}
+.chip.ko{background:#fee2e2;border-color:#fecaca;color:#991b1b;}
+.recruiter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;box-shadow:0 6px 14px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:10px;}
+.card header{font-weight:700;display:flex;align-items:center;gap:8px;color:#111827;}
+.card label{display:flex;flex-direction:column;font-size:13px;color:#374151;gap:6px;}
+.card input,.card textarea{border:1px solid #e5e7eb;border-radius:10px;padding:10px;font-size:13px;width:100%;outline:none;transition:border-color .2s, box-shadow .2s;}
+.card input:focus,.card textarea:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.15);}
+.recruiter-actions{margin-top:16px;display:flex;gap:10px;justify-content:flex-end;}
+.primary{background:#7c3aed;color:white;border:none;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;box-shadow:0 8px 16px rgba(124,58,237,.18);}
+.primary.save-btn{display:none;}
+.secondary{background:#e5e7eb;color:#111827;border:none;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;}
+.primary:hover{background:#6d28d9;}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('recruiter-form');
+  const editBtns = Array.from(form.querySelectorAll('.edit-btn'));
+  const saveBtns = Array.from(form.querySelectorAll('.save-btn'));
+  const cancelBtns = Array.from(form.querySelectorAll('.cancel-btn'));
+  const fields = Array.from(form.querySelectorAll('input, textarea'));
+
+  const initialValues = new Map();
+  fields.forEach(f => initialValues.set(f.name, f.value));
+
+  function setEditMode(on) {
+    fields.forEach(f => f.disabled = !on);
+    editBtns.forEach(b => b.style.display = on ? 'none' : 'inline-flex');
+    saveBtns.forEach(b => b.style.display = on ? 'inline-flex' : 'none');
+    cancelBtns.forEach(b => b.style.display = on ? 'inline-flex' : 'none');
+  }
+  function resetForm() {
+    fields.forEach(f => { if (initialValues.has(f.name)) f.value = initialValues.get(f.name); });
+    setEditMode(false);
+  }
+  editBtns.forEach(b => b.addEventListener('click', e => { e.preventDefault(); setEditMode(true); }));
+  cancelBtns.forEach(b => b.addEventListener('click', e => { e.preventDefault(); resetForm(); }));
+
+  // live preview logo
+  const logoInput = document.getElementById('company-logo-input');
+  const logoImg = document.getElementById('company-logo-img');
+  const logoFile = document.getElementById('company-logo-file');
+  if (logoInput) {
+    logoInput.addEventListener('input', () => {
+      const v = logoInput.value.trim();
+      if (v === '') {
+        if (logoImg) { logoImg.remove(); }
+        let placeholder = document.getElementById('company-logo-placeholder');
+        if (!placeholder) {
+          placeholder = document.createElement('div');
+          placeholder.id = 'company-logo-placeholder';
+          placeholder.className = 'recruiter-logo placeholder';
+          placeholder.textContent = 'Logo';
+          const wrap = document.querySelector('.recruiter-logo-wrap');
+          if (wrap) wrap.appendChild(placeholder);
+        }
+      } else {
+        let img = document.getElementById('company-logo-img');
+        if (!img) {
+          img = document.createElement('img');
+          img.id = 'company-logo-img';
+          img.className = 'recruiter-logo';
+          const wrap = document.querySelector('.recruiter-logo-wrap');
+          const ph = document.getElementById('company-logo-placeholder');
+          if (ph) ph.remove();
+          if (wrap) wrap.appendChild(img);
+        }
+        img.src = v;
+      }
+    });
+  }
+  if (logoFile) {
+    logoFile.addEventListener('change', () => {
+      const file = logoFile.files && logoFile.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        let img = document.getElementById('company-logo-img');
+        if (!img) {
+          img = document.createElement('img');
+          img.id = 'company-logo-img';
+          img.className = 'recruiter-logo';
+          const wrap = document.querySelector('.recruiter-logo-wrap');
+          const ph = document.getElementById('company-logo-placeholder');
+          if (ph) ph.remove();
+          if (wrap) wrap.appendChild(img);
+        }
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  setEditMode(false);
+});
+</script>
+{% endblock %}

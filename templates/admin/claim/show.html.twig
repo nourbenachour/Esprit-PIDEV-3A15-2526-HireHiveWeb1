@@ -1,0 +1,136 @@
+{% extends 'admin/base_admin.html.twig' %}
+
+{% block title %}Réclamation #{{ claim.id }} – Backoffice{% endblock %}
+
+{% block backoffice_content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+    <a href="{{ path('app_admin_claim_index') }}" style="color:var(--accent); font-size:13px; font-weight:700; text-decoration:none;">← Toutes les réclamations</a>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="{{ path('app_admin_claim_edit', {id: claim.id}) }}" class="adm-btn adm-btn-edit">Éditer</a>
+        <form method="post" action="{{ path('app_admin_claim_delete', {id: claim.id}) }}"
+              onsubmit="return confirm('Supprimer définitivement cette réclamation ?');" style="display:inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ claim.id) }}">
+            <button type="submit" class="adm-btn adm-btn-del">Supprimer</button>
+        </form>
+    </div>
+</div>
+
+{# ── Claim Detail Card ── #}
+<div class="adm-card">
+    <div class="adm-card-top">
+        {% set s = claim.status %}
+        <span class="adm-badge status-badge-{{ s|lower|replace({'_':'-'}) }}">
+            {% if s == 'OPEN' %}Ouvert
+            {% elseif s == 'IN_PROGRESS' %}En cours
+            {% elseif s == 'RESOLVED' %}Résolu
+            {% else %}Fermé{% endif %}
+        </span>
+        <span class="adm-badge priority-badge-{{ claim.priority|lower }}">{% if claim.priority == 'HIGH' %}Haute{% else %}Normale{% endif %}</span>
+        <span class="adm-badge type-badge">{{ claim.type }}</span>
+    </div>
+    <h1 class="adm-card-title">{{ claim.title }}</h1>
+    <div class="adm-meta">
+        <span>Utilisateur #{{ claim.user_id }}</span>
+        <span>{{ claim.created_at|date('d/m/Y H:i') }}</span>
+        {% if claim.resolved_at %}
+            <span>Résolu le {{ claim.resolved_at|date('d/m/Y') }}</span>
+        {% endif %}
+    </div>
+    <div class="adm-desc">{{ claim.description }}</div>
+</div>
+
+{# ── Existing Responses (Threaded Chat) ── #}
+<div class="adm-section">
+    <h2 class="section-title">Discussion du ticket ({{ responses|length }})</h2>
+    
+    <div class="chat-container">
+        {% if responses is empty %}
+            <div class="empty">Aucun message pour le moment. L'historique s'affichera ici.</div>
+        {% else %}
+            {% for resp in responses %}
+                {% set isClient = (resp.responder_id == claim.user_id) %}
+                <div class="chat-bubble {{ isClient ? 'chat-client' : 'chat-support' }}">
+                    <div class="chat-meta">
+                        <span class="chat-author">
+                            {% if isClient %}
+                                Client #{{ resp.responder_id }}
+                            {% else %}
+                                Vous / Admin #{{ resp.responder_id }}
+                            {% endif %}
+                        </span>
+                        <span class="chat-date">{{ resp.created_at|date('d/m/Y H:i') }}</span>
+                    </div>
+                    <p class="chat-message">{{ resp.message|nl2br }}</p>
+                    {% if resp.internal_notes and not isClient %}
+                        <p class="internal-note">Note interne : {{ resp.internal_notes }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+{# ── Add Response Form (server-side validated) ── #}
+<div class="adm-section">
+    <h2 class="section-title">Ajouter une réponse</h2>
+    <p style="color:var(--muted); font-size:13px; margin-bottom:14px;">
+        La validation côté serveur est active (<code>novalidate</code>).
+    </p>
+
+    {{ form_start(responseForm, {'action': path('app_admin_claim_respond', {id: claim.id})}) }}
+        <div class="field-group">
+            {{ form_label(responseForm.message, 'Message') }}
+            {{ form_widget(responseForm.message, {'attr': {'class': 'adm-textarea'}}) }}
+            {% if responseForm.message.vars.errors|length > 0 %}
+                <div class="field-errors">
+                    {% for error in responseForm.message.vars.errors %}
+                        <span class="error-msg">! {{ error.message }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <button type="submit" class="adm-btn adm-btn-primary">Envoyer la réponse</button>
+    {{ form_end(responseForm) }}
+</div>
+
+<style>
+.adm-btn { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 700; text-decoration: none; display: inline-block; border: none; cursor: pointer; }
+.adm-btn-primary { background: var(--accent); color: #fff; }
+.adm-btn-primary:hover { background: #5b21b6; }
+.adm-btn-edit { background: rgba(234,179,8,.15); color: #fde68a; }
+.adm-btn-edit:hover { background: rgba(234,179,8,.3); }
+.adm-btn-del { background: rgba(239,68,68,.15); color: #fca5a5; }
+.adm-btn-del:hover { background: rgba(239,68,68,.3); }
+.adm-badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.priority-badge-high { background: #450a0a; color: #fca5a5; }
+.priority-badge-normal { background: #1e1b4b; color: #a5b4fc; }
+.status-badge-open { background: #1e3a5f; color: #93c5fd; }
+.status-badge-in-progress { background: #451a03; color: #fcd34d; }
+.status-badge-resolved { background: #052e16; color: #86efac; }
+.status-badge-closed { background: #111827; color: #9ca3af; }
+.type-badge { background: #1e1b4b; color: #c4b5fd; }
+.adm-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin-bottom: 24px; }
+.adm-card-top { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.adm-card-title { font-size: 20px; font-weight: 800; color: var(--text); margin: 0 0 10px; }
+.adm-meta { display: flex; gap: 16px; font-size: 13px; color: var(--muted); flex-wrap: wrap; margin-bottom: 14px; }
+.adm-desc { color: #d1d5db; font-size: 14px; line-height: 1.7; white-space: pre-wrap; background: #0f172a; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+.adm-section { margin-bottom: 28px; }
+.chat-container { display:flex; flex-direction:column; gap:16px; margin-bottom:24px; padding:16px; background:var(--card); border-radius:12px; border:1px solid var(--border); }
+.chat-bubble { max-width: 85%; padding: 14px 18px; border-radius: 12px; }
+.chat-client { align-self: flex-start; background: #1e293b; color: #f8fafc; border-bottom-left-radius: 2px; border: 1px solid var(--border); }
+.chat-client .chat-meta { color: #94a3b8; }
+.chat-support { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 2px; }
+.chat-support .chat-meta { color: #d8b4fe; }
+.chat-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px; flex-wrap:wrap; gap:6px; }
+.chat-author { font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.chat-message { margin: 0; line-height: 1.6; font-size: 14px; }
+.internal-note { color: #cbd5e1; font-size: 12px; border-top: 1px dashed rgba(255,255,255,0.2); margin-top: 10px; padding-top: 8px; }
+.field-group { margin-bottom: 16px; }
+.field-group label { display: block; font-weight: 700; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.adm-textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: #0f172a; color: var(--text); resize: vertical; min-height: 100px; }
+.adm-textarea:focus { outline: none; border-color: var(--accent); }
+.field-errors { margin-top: 6px; }
+.error-msg { display: block; color: #fca5a5; font-size: 13px; font-weight: 600; background: #450a0a; padding: 5px 10px; border-radius: 6px; margin-top: 4px; border: 1px solid #7f1d1d; }
+</style>
+{% endblock %}

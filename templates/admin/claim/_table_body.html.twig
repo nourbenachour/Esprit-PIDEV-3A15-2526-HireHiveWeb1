@@ -1,0 +1,42 @@
+{% for claim in claims %}
+    <tr>
+        <td>#{{ claim.id }}</td>
+        <td>
+            <a href="{{ path('app_admin_claim_show', {id: claim.id}) }}" style="text-decoration:none; display:block;">
+                <div style="font-weight:700; color:var(--accent); margin-bottom:4px; text-decoration:underline;">{{ claim.title }}</div>
+                <div style="color:var(--muted); font-size:12px; max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    {{ claim.description }}
+                </div>
+            </a>
+        </td>
+        <td>{{ claim.type }}</td>
+        <td>#{{ claim.user_id }}</td>
+        <td>
+            <span class="adm-badge priority-badge-{{ claim.priority|lower }}">
+                {% if claim.priority == 'HIGH' %}Haute{% else %}Normale{% endif %}
+            </span>
+        </td>
+        <td>
+            {% set s = claim.status %}
+            <span class="adm-badge status-badge-{{ s|lower|replace({'_':'-'}) }}">
+                {% if s == 'OPEN' %}Ouvert
+                {% elseif s == 'IN_PROGRESS' %}En cours
+                {% elseif s == 'RESOLVED' %}Résolu
+                {% else %}Fermé{% endif %}
+            </span>
+        </td>
+        <td>{{ claim.created_at|date('d/m/Y H:i') }}</td>
+        <td style="text-align:right; white-space:nowrap;">
+            <a href="{{ path('app_admin_claim_edit', {id: claim.id}) }}" class="adm-btn-xs adm-btn-edit">Éditer</a>
+            <form method="post" action="{{ path('app_admin_claim_delete', {id: claim.id}) }}"
+                  onsubmit="return confirm('Confirmer la suppression ?');" style="display:inline">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ claim.id) }}">
+                <button type="submit" class="adm-btn-xs adm-btn-del">Supprimer</button>
+            </form>
+        </td>
+    </tr>
+{% else %}
+    <tr>
+        <td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">Aucune réclamation ne correspond à votre recherche.</td>
+    </tr>
+{% endfor %}
